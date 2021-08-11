@@ -13,15 +13,25 @@ const {
 	InitializeResult,
 } = require('vscode-languageserver');
 
-function lsp_log(text) {
-    //let msg = JSON.stringify({ "msg": text });
-    //console.log(`Content-Length: ${msg.length}\r\n\r\n${msg}`);
-}
+//function lsp_log(text) {
+//    //let msg = JSON.stringify({ "msg": text });
+//    //console.log(`Content-Length: ${msg.length}\r\n\r\n${msg}`);
+//}
 
+const Entity = {    // not a class because https://stackoverflow.com/a/28281845/10372825
+    name: null,
+    workspace: '/default/path/to/workspace',
+    akas: set(),
+    mentions: {},   // of the form 'fileid': [linenr, linenr]
+    // methods
+    set_mentions_by_file = async (updates) => {
+        mentions.assign(updates);
+    }
+}
 module.exports = {
-    init: (workspace) => ({
+    init: (workspace, connection) => ({
         // TODO: all the functions here need to be plugged into the db
-        listEntities: async () => {
+        getEntityList: async () => {
             let ret = [];
             for (let i=1; i<=10000; i++) {
                 ret.push({

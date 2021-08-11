@@ -19,6 +19,46 @@ Like [obsidian](https://obsidian.md) but better.
 
 **Passes the no-mouse test** which unfortunately many apps don't (obsidian, ideaflow atm).
 
+## data model
+- note / file / document
+    - documents have IDs. it's the filename excluding the `.aloh` extention.
+- entity
+    - entities don't have IDs, because thats cringe. (makes it not look like real text)
+    - data
+        - name
+        - akas 
+        - shortest aka? or just calculate it?
+        - dict<fileid, list[reference lines]>
+- relation
+    - relations also don't have IDs. you shouldn't be renaming these.
+    - denoted `.relation` (allows alphanumeric + hyphens)
+- tag ??
+    - are tags just entities
+    - denoted `:tag` (allows alphanumeric + hyphens)
+DEPRECATED:
+- database
+    - list of associative notes + related links 
+    - list of tags + relations 
+    - relation tree?
+    - type tree?
+- state to maintain
+    - entities
+        - all .aka s
+        - shortest .aka
+        - relation instances that mention 
+    - relations / tags
+        - mentions 
+    - relation instance
+        - created
+        - importance???? 
+
+### a note on stats
+- a line is considered to refer to all entities of the nearest de-indented above line with an entity/tag reference in it
+    - for instance, this line has three associated lines: (two below plus the line itself)
+        - this line has just two associated lines (itself and it's child)
+            - this line is only associated with it's direct parent
+        - this line is not associated with it's above sibling, but is associated with it's parent
+
 ## tinfoil hat
 - ideal [ideaflow][ideaflow.io] but I can't wait for Jacob et al. to implement stuff
 - see +associative notes language server in ideaflow
@@ -27,11 +67,6 @@ Like [obsidian](https://obsidian.md) but better.
     - NER (spacy pipeline https://spacy.io/universe/project/spacy-js?)
     - keyword extraction: TF-IDF on SpaCy output?
     - some kind of database
-- database
-    - list of associative notes + related links 
-    - list of tags + relations 
-    - relation tree?
-    - type tree?
 - outside integration
     - google knowledge graph types
     - wikification
@@ -49,16 +84,6 @@ Like [obsidian](https://obsidian.md) but better.
         - go to definition
         - find references
         - show documentation: show relevant relations
-    - state to maintain
-        - entities
-            - all .aka s
-            - shortest .aka
-            - relation instances that mention 
-        - relations / tags
-            - mentions 
-        - relation instance
-            - created
-            - importance???? 
     - vim shortcut to expand definition 
         - C-smt -> <ESC>:vsp<C-w><C-h><C-o><C-w><C-l>
     - native subtype completion using paths

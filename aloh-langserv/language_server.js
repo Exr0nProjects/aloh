@@ -9,6 +9,7 @@ const {
 const { TextDocument } = require('vscode-languageserver-textdocument')
 
 var dbman = require('./dbman');
+var objman = require('./objman');
 
 
 
@@ -50,10 +51,12 @@ const connection = exports.connection;
 const documents = new TextDocuments(TextDocument)
 
 connection.onInitialize(async (client_init_params) => {
-    dbman = dbman.init(client_init_params.workspaceFolders[0].uri);
+    let root_dir = client_init_params.workspaceFolders[0].uri;
+    if (!root_dir.startsWith('file://')) throw Error('unknown workspace uri');
+    dbman = dbman.init(root_dir.replace('file://', ''), connection);
     return {
         capabilities: {
-            textDocumentSync: documents.syncKind,
+            textDocumentSync: TextDocumentSyncKind.Full,
             completionProvider: {
                 resolveProvider: true
             }
@@ -61,11 +64,19 @@ connection.onInitialize(async (client_init_params) => {
     }
 });
 
-documents.onDidChangeContent(async change => {
-    connection.sendDiagnostics({
-        uri: change.document.uri,
-        diagnostics: getDiagnostics(change.document),
-    })
+documents.onDidChangeContent(async change => {      // TODO: lots of race conditions here
+    const most_recent_text = change.contentChanges[change.contentChanges.length-1];
+
+    let [ entities, tags, relations ] = await Promise.all(
+        objman.parse_entities(most_recent_text),    // these modify the DB state
+        objman.parse_tags(most_recent_text),
+        objman.parse_relations(most_recent_text)
+    );
+
+    //connection.sendDiagnostics({
+    //    uri: change.document.uri,
+    //    diagnostics: getDiagnostics(change.document),
+    //})
 })
 
 connection.onDidChangeWatchedFiles(async change => {
