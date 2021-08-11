@@ -17,6 +17,8 @@ Like [obsidian](https://obsidian.md) but better.
 
 **Learning is about editing and iterating, not writing and copying.** 
 
+**Passes the no-mouse test** which unfortunately many apps don't (obsidian, ideaflow atm).
+
 ## tinfoil hat
 - ideal [ideaflow][ideaflow.io] but I can't wait for Jacob et al. to implement stuff
 - see +associative notes language server in ideaflow
