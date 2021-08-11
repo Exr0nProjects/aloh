@@ -1,0 +1,12 @@
+{
+  "name": "aloh-langserv",
+  "version": "0.0.1",
+  "main": "index.js",
+  "author": "Exr0n",
+  "license": "MIT",
+  "dependencies": {
+    "ramda": "^0.27.1",
+    "vscode-languageserver": "^7.0.0",
+    "vscode-languageserver-textdocument": "^1.0.1"
+  }
+}

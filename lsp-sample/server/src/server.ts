@@ -215,22 +215,14 @@ connection.onCompletion(
         //return toArray(pipeline(numbers(100)))
         
         let ret = [];
-        for (let i=1; i<=100; i++) ret.push({
-            label: `amazing${i}`
-        })
-
-		//return [
-		//    {
-		//        label: 'TypeScript',
-		//        kind: CompletionItemKind.Text,
-		//        data: 1
-		//    },
-		//    {
-		//        label: 'JavaScript',
-		//        kind: CompletionItemKind.Text,
-		//        data: 2
-		//    }
-		//];
+        for (let i=1; i<=10000; i++) {
+            ret.push({
+                label: `amazing${i}`,
+                kind: CompletionItemKind.Text,
+                data: i,
+            });
+        }
+        return ret;
 	}
 );
 
@@ -238,13 +230,8 @@ connection.onCompletion(
 // the completion list.
 connection.onCompletionResolve(
 	(item: CompletionItem): CompletionItem => {
-		if (item.data === 1) {
-			item.detail = 'TypeScript details';
-			item.documentation = 'TypeScript documentation';
-		} else if (item.data === 2) {
-			item.detail = 'JavaScript details';
-			item.documentation = 'JavaScript documentation';
-		}
+        item.detail = `details for item ${item.data}`;
+        item.documentation = `documentation for item ${item.data}:\n- amazing\n- cool`;
 		return item;
 	}
 );
