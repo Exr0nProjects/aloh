@@ -3,21 +3,15 @@
 const {
     createConnection,
 	TextDocuments,
-	Diagnostic,
 	DiagnosticSeverity,
-	ProposedFeatures,
-	InitializeParams,
-	DidChangeConfigurationNotification,
-	CompletionItem,
-	CompletionItemKind,
-	TextDocumentPositionParams,
-	TextDocumentSyncKind,
-	InitializeResult,
 } = require('vscode-languageserver')
 
 const { TextDocument } = require('vscode-languageserver-textdocument')
 
-const dbman = require('./dbman');
+var dbman = require('./dbman');
+
+
+
 
 const getBlacklisted = (text) => {
     const blacklist = [
@@ -35,7 +29,6 @@ const getBlacklisted = (text) => {
     }
     return results
 }
-
 const blacklistToDiagnostic = (textDocument) => ({ index, value }) => ({
     severity: DiagnosticSeverity.Warning,
     range: {
@@ -45,57 +38,54 @@ const blacklistToDiagnostic = (textDocument) => ({ index, value }) => ({
     message: `${value} is blacklisted.`,
     source: 'Blacklister',
 })
-
 const getDiagnostics = (textDocument) =>
     getBlacklisted(textDocument.getText())
         .map(blacklistToDiagnostic(textDocument))
+
+
+
 
 exports.connection = createConnection()
 const connection = exports.connection;
 const documents = new TextDocuments(TextDocument)
 
-connection.onInitialize(() => ({
-    capabilities: {
-        textDocumentSync: documents.syncKind,
-        completionProvider: {
-            resolveProvider: true
-        }
-    },
-}));
+connection.onInitialize(async (client_init_params) => {
+    dbman = dbman.init(client_init_params.workspaceFolders[0].uri);
+    return {
+        capabilities: {
+            textDocumentSync: documents.syncKind,
+            completionProvider: {
+                resolveProvider: true
+            }
+        },
+    }
+});
 
-documents.onDidChangeContent(change => {
+documents.onDidChangeContent(async change => {
     connection.sendDiagnostics({
         uri: change.document.uri,
         diagnostics: getDiagnostics(change.document),
     })
 })
 
-connection.onDidChangeWatchedFiles(change => {
+connection.onDidChangeWatchedFiles(async change => {
     // Monitored files have change in VSCode
     connection.console.log('We received an file change event');
     connection.console.log(change);
 });
 
-connection.onCompletion(textdocument_position => {
+connection.onCompletion(async textdocument_position => {
     connection.console.log(textdocument_position);
-    //dbman.hi(connection);
-    let ret = [];
-    for (let i=1; i<=10000; i++) {
-        ret.push({
-            label: `amazing${i}`,
-            kind: CompletionItemKind.Text,
-            data: i,
-        });
-    }
-    return ret;
+    return await dbman.listEntities();   // TODO: whittle down the list a bit using textdocument_position
 });
 
-connection.onCompletionResolve((item) => {
-    item.detail = 'item details';
-    item.documentation = 'documentation stuff woooooo';
+connection.onCompletionResolve(async (item) => {
+    item.detail = await dbman.getAkasForEntity(item.data)
+        .then(akas => ',aka: ' + akas.join(', '))
+        .catch(err => err.toString());
+    item.documentation = await dbman.getReferenceForEntity(item.data)
+        .catch(err => err.toString());
     return item;
 });
 
 documents.listen(connection)
-//connection.listen()
-
