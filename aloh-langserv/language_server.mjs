@@ -88,7 +88,6 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
             for (let ent in objs[0]) {
                 objs[0][ent] = { file_id: file_id, lines: objs[0][ent].lines }
             }
-            appendFile('/home/exr0n/snap/dbman.log', 'entities:\n' + JSON.stringify(objs[0].entries, null, 2) + '\n\n\n');
             dbman.setNoteObjects(file_id, objs);
         });
     connection.sendDiagnostics({

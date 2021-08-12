@@ -14,12 +14,16 @@ class Entity {    // not a class because https://stackoverflow.com/a/28281845/10
     async set_mentions_by_file(updates) {
         for (const [n, m] of Object.entries(updates))
             this.mentions.set(n, m);
+        appendFile('/home/exr0n/snap/dbman.log', this.mentions.size + ' is the size of ' + this.name + '\n');
         if (this.mentions.size === 0) {
             // TODO: remove this entity from the list
         }
     }
+    toString() {
+        return `<Entity ${this.name}, ${JSON.stringify(Object.fromEntries(this.mentions), null, 4)}>`
+    }
 }
-var entities = new Map();
+var db_entities = new Map();
 function load_entities() {
     // TODO
 }
@@ -28,6 +32,7 @@ function load_entities() {
 
 export default async function(workspace, connection) {
     load_entities();
+    //let count =  0;
     return {
         // TODO: all the functions here need to be plugged into the db
         getEntityList: async () => {
@@ -47,10 +52,13 @@ export default async function(workspace, connection) {
         },
         setNoteObjects: async (file_id, objects) => {
             const [ entities, tags, relations ] = objects;
-            appendFile('/home/exr0n/snap/dbman.log', 'entities:\n' + JSON.stringify(entities, null, 2) + '\n\n\n');
-            //entities.entries().forEach(([ent, { lines }]) => {
-            //
-            //})
+            Object.entries(entities).forEach(([ent, { file_id, lines }]) => {
+                if (!db_entities.has(ent)) db_entities[ent] = new Entity(ent);
+                db_entities[ent].set_mentions_by_file(Object.fromEntries([[file_id, lines]]))
+                //appendFile('/home/exr0n/snap/dbman.log', 'entities ' + db_entities[ent] + '\n');
+            })
+            //appendFile('/home/exr0n/snap/dbman.log', '\n\n\n');
+            //appendFile('/home/exr0n/snap/dbman.log', 'operation #' + count++ + '\n');
             // TODO: do stuff with entities, tags, relations
         }
     };
