@@ -15,12 +15,14 @@ sio.attach(app)
 
 # set up spacy
 print('loading spacy...', end='\r')
-try:
-    nlp = spacy.load(SPACY_MODEL, disable=["tagger", "parser", "attribute_ruler", "lemmatizer"])
-except OSError:
-    from subprocess import run
-    run(['python3', '-m', 'spacy', 'download', SPACY_MODEL])
-    nlp = spacy.load(SPACY_MODEL, disable=["tagger", "parser", "attribute_ruler", "lemmatizer"])
+# spaghetti ahead
+# try:
+#     nlp = spacy.load(SPACY_MODEL, disable=["tagger", "parser", "attribute_ruler", "lemmatizer"])
+# except OSError:
+#     from subprocess import run
+#     run(['python3', '-m', 'spacy', 'download', SPACY_MODEL])
+#     nlp = spacy.load(SPACY_MODEL, disable=["tagger", "parser", "attribute_ruler", "lemmatizer"])
+nlp = spacy.load(SPACY_MODEL)
 print('spacy loaded successfully')
 
 # event handlers for connect/disconnect, we don't need them atm
@@ -35,6 +37,14 @@ print('spacy loaded successfully')
 @sio.event
 def parse_NER(_, data):
     return [(ent.text, ent.label_) for ent in nlp(data).ents]     # TODO: should this server deal with deduplication?
+
+@sio.event
+def parse_chunks(_, data):
+    arr = [(span.text, [tok.pos_ for tok in span]) for span in nlp(data).noun_chunks]
+    print(arr)  # search for patterns of ADJ* NOUN* which are rare?
+    # or PROPN* NOUN*
+    # remove leading DET and intermitent PUNCT?
+    # return arr
 
 if __name__ == '__main__':
     web.run_app(app, port=int(PORT))
