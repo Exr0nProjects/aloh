@@ -14,3 +14,4 @@ python3 -m spacy download en_core_web_lg
 - database
 - always chooses the default workspace folder
 
+- it might help to lemma-ize everything

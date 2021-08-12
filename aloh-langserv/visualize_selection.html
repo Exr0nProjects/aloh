@@ -1,0 +1,46 @@
+<!doctype html>
+
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>visualizer</title>
+    </head>
+    <body style="background-color: black; padding-top: 10px; padding-left: 30%; padding-right: 30%; color: gray; font-family: monospace;">
+        <div>
+            <input type="range" id="slider" min="0" max="20" value="13"> <pre id="slider-text"></pre>
+        </div>
+        <ul id="item-text">
+            <li data-freq="-11.483366662728685">the mathematical field</li><li data-freq="-13.3580857109254">topology</li><li data-freq="-12.224236616157844">knot theory</li><li data-freq="-8.611503870887478">the study</li><li data-freq="-12.693832996365169">mathematical knots</li><li data-freq="-12.363896730723742">knots</li><li data-freq="-9.190537744680004">daily life</li><li data-freq="-14.82886300268156">shoelaces</li><li data-freq="-11.37316352259507">rope</li><li data-freq="-12.54856295447695">a mathematical knot</li><li data-freq="-9.78659380106463">the ends</li><li data-freq="0.0">it</li><li data-freq="-12.93588381046171">the simplest knot</li><li data-freq="-9.647296147175718">a ring</li><li data-freq="-11.50297513411706">mathematical language</li><li data-freq="-12.157282481360742">a knot</li><li data-freq="-13.815510557964274">an embedding</li><li data-freq="-10.245977861482904">a circle</li><li data-freq="0.0">3-dimensional Euclidean space</li><li data-freq="-8.403864506109235">{R</li><li data-freq="-18.371890579782935">^{3}}\mathbb</li><li data-freq="-8.645026562926123">{R} ^{3</li><li data-freq="-13.3580857109254">topology</li><li data-freq="-10.245977861482904">a circle</li><li data-freq="-12.703653042546144">the classical geometric concept</li><li data-freq="0.0">its homeomorphisms</li><li data-freq="0.0">Two mathematical knots</li><li data-freq="0.0">one</li><li data-freq="-13.443947001531791">a deformation</li><li data-freq="-18.371890579782935">^{3}}\mathbb</li><li data-freq="-8.403864506109235">{R</li><li data-freq="-7.1147794484164635">^{3</li><li data-freq="0.0">itself</li><li data-freq="-18.008571093125532">an ambient isotopy</li><li data-freq="-12.895227804820582">these transformations</li><li data-freq="-14.207072760903447">manipulations</li><li data-freq="-14.144014624936311">a knotted string</li><li data-freq="0.0">it</li><li data-freq="0.0">itself</li><li data-freq="-12.363896730723742">Knots</li><li data-freq="-9.698100722811176">various ways</li><li data-freq="-10.645824977286845">different description methods</li><li data-freq="0.0">more than one description</li><li data-freq="-12.166851932376892">the same knot</li><li data-freq="-8.589763884251074">example</li><li data-freq="-10.006628311455641">a common method</li><li data-freq="-12.157282481360742">a knot</li><li data-freq="-13.805560227111107">a planar diagram</li><li data-freq="-12.71357047920349">a knot diagram</li><li data-freq="-12.157282481360742">any knot</li><li data-freq="-9.434734705192046">many different ways</li><li data-freq="-10.834891922220331">a fundamental problem</li><li data-freq="-12.224236616157844">knot theory</li><li data-freq="0.0">two descriptions</li><li data-freq="-12.166851932376892">the same knot</li><li data-freq="-14.3585150800945">A complete algorithmic solution</li><li data-freq="-8.29005761883249">this problem</li><li data-freq="-11.736069016284437">unknown complexity</li><li data-freq="-9.070578429601024">practice</li><li data-freq="-12.363896730723742">knots</li><li data-freq="-11.355921716160564">a "quantity</li><li data-freq="-11.718720377949825">different descriptions</li><li data-freq="-12.157282481360742">a knot</li><li data-freq="-15.151111804768647">Important invariants</li><li data-freq="-14.452277405088111">knot polynomials</li><li data-freq="-12.196122314677005">knot groups</li><li data-freq="-15.320588455074132">hyperbolic invariants</li><li data-freq="-11.11414934501286">The original motivation</li><li data-freq="-11.904487667909402">the founders</li><li data-freq="-12.224236616157844">knot theory</li><li data-freq="-9.09701168666918">a table</li><li data-freq="-12.363896730723742">knots</li><li data-freq="-9.854697388366697">links</li><li data-freq="-12.363896730723742">knots</li><li data-freq="-10.604666904793337">several components</li><li data-freq="0.0">More than six billion knots</li><li data-freq="-9.854697388366697">links</li><li data-freq="-12.340747548856775">the beginnings</li><li data-freq="-12.224236616157844">knot theory</li><li data-freq="-9.506054616125228">the 19th century</li><li data-freq="-11.148282351382319">further insight</li><li data-freq="-13.515405965513937">mathematicians</li><li data-freq="-12.242736629901765">the knot concept</li><li data-freq="-9.456240910413008">several ways</li><li data-freq="-12.363896730723742">Knots</li><li data-freq="0.0">other three-dimensional spaces</li><li data-freq="-11.21282087251989">circles</li><li data-freq="-12.157282481360742">knot</li><li data-freq="-11.169335760580152">mathematics</li><li data-freq="-12.72023717056168">Higher-dimensional knots</li><li data-freq="0.0">n-dimensional spheres</li><li data-freq="0.0">m-dimensional Euclidean space</li>
+        </ul>
+        <script>
+            let items = document.getElementById('item-text').children;
+            const slider = document.getElementById('slider');
+            const display = document.getElementById('slider-text');
+            function calcGradient(a, b, ratio) {
+                            x = a.map((v, i) => v*ratio + b[i] * (1-ratio))
+                                .map(v => Math.round(v))
+                                .map(v => v.toString(16).padStart(2, '0')).join('')
+                            return x
+                        }
+            setInterval(() => {
+                            display.innerHTML = slider.value
+                    for (const elm of items) {
+                                    console.log(elm)
+                            const fq = elm.dataset.freq;
+                                    console.log(fq)
+                        elm.style.color = '#' + calcGradient([0, 180, 0], [180, 0, 0], -fq / 20)
+                                    
+                                    if (-fq> slider.value) {
+                                                    elm.style.textDecoration = 'none'
+                                                    
+                                                }
+                                    else {
+                                                    elm.style.textDecoration = 'line-through'
+                                                }
+                    }
+
+                        }, 100)
+        </script>
+    </body>
+</html>
+

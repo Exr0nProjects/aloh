@@ -13,7 +13,7 @@ socket.on('connect', () => {
     socket.emit('parse_chunks', data, (amazing) => {
         //console.log('response recieved!');
         console.log(amazing);
-        socket.disconnect();
+        //socket.disconnect();
     });
 });
 
