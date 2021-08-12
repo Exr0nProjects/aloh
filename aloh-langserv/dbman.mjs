@@ -11,13 +11,18 @@ class Entity {    // not a class because https://stackoverflow.com/a/28281845/10
         this.mentions = mentions;   // of the form 'field': [linenr, linenr]
     }
     // methods
-    async set_mentions_by_file(updates) {
-        for (const [n, m] of Object.entries(updates))
-            this.mentions.set(n, m);
-        appendFile('/home/exr0n/snap/dbman.log', this.mentions.size + ' is the size of ' + this.name + '\n');
-        if (this.mentions.size === 0) {
-            // TODO: remove this entity from the list
+    async set_mentions_by_file(file_id, mentions) {
+        //appendFile('/home/exr0n/snap/dbman.log', this.mentions.size + ' is the size of ' + this.name + '\n');
+        if (mentions.length === 0) {
+            this.mentions.delete(file_id);
+            if (this.mentions.size === 0) {
+                db_entities.delete(this.name);
+                appendFile('/home/exr0n/snap/dbman.log', 'oofity boofity' + this.name + 'got yeetused\n');
+            }
+        } else {
+            this.mentions.set(file_id, mentions);
         }
+        //appendFile('/home/exr0n/snap/dbman.log', this.mentions.size + ' is the size of ' + this.name + '\n');
     }
     toString() {
         return `<Entity ${this.name}, ${JSON.stringify(Object.fromEntries(this.mentions), null, 4)}>`
@@ -53,12 +58,18 @@ export default async function(workspace, connection) {
         setNoteObjects: async (file_id, objects) => {
             const [ entities, tags, relations ] = objects;
             Object.entries(entities).forEach(([ent, { file_id, lines }]) => {
-                if (!db_entities.has(ent)) db_entities[ent] = new Entity(ent);
-                db_entities[ent].set_mentions_by_file(Object.fromEntries([[file_id, lines]]))
+                ent = ent.toString();
+                if (!db_entities.has(ent)) {
+                    appendFile('/home/exr0n/snap/dbman.log', 'NEW ENTITY ' + ent + '\n');
+                    db_entities.set(ent, new Entity(ent));
+                }
+                db_entities.get(ent).set_mentions_by_file(file_id, lines)
+                // TODO: cache entities by file and delete them if they got changed
                 //appendFile('/home/exr0n/snap/dbman.log', 'entities ' + db_entities[ent] + '\n');
             })
             //appendFile('/home/exr0n/snap/dbman.log', '\n\n\n');
             //appendFile('/home/exr0n/snap/dbman.log', 'operation #' + count++ + '\n');
+            appendFile('/home/exr0n/snap/dbman.log', 'the map currently has' + db_entities.size + ' entities\n');
             // TODO: do stuff with entities, tags, relations
         }
     };
