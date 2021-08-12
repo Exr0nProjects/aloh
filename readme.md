@@ -80,6 +80,7 @@ DEPRECATED:
     - fixit mode:
         - ask about relations between entities that often appear near eachother
         - when something of a type doesn't have the same relations as other things of a type
+        - should also train spacy to get better using entity linking and a KB: https://spacy.io/api/kb
     - language server
         - go to definition
         - find references
