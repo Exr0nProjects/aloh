@@ -8,9 +8,10 @@ console.log('socket instantiated!')
 socket.on('connect', () => {
     console.log('socket connected!');
     console.log(socket.id);
-    socket.emit('amazin', (...args) => {
+    let data = 'meet Aloh: an app inspired by jacob cole and huxley marvit'
+    socket.emit('parse_NER', data, (amazing) => {
         console.log('response recieved!');
-        console.log(...args);
+        console.log(amazing);
     });
 });
 
