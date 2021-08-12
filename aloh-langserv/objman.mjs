@@ -70,35 +70,52 @@ async function parse_entities(text) {
     return ret;
 }
 
-async function parse_with_regex(text) {
+async function parse_with_regex(text, pattern, ignore_beg, ignore_end) {
     let ret = {};
     const register = (val, line, start, end) => {
-        if (!ret.hasOwnProperty(tag)) 
+        if (!ret.hasOwnProperty(val)) 
             ret[val] = { refs: [] }
-        ret[val].lines.push([{ line:  }])
+        ret[val].refs.push([{ line: line, start: start, end: end }])
     }
+    for (let [idx, line] of text.split('\n').entries()) {
+        //while ((match = pattern.exec(line)) != null) {
+        //    let [ b, e ] = [ ignore_beg(tag), ignore_end(tag) ];
+        //    register_tag(tag.slice(b, e), idx,
+        //        match.index + b, match.index + match[0].length - e + 1);
+        //}
+        for (const match of line.matchAll(pattern)) {
+            let [ b, e ] = [ ignore_beg(match[0]), ignore_end(match[0]) ];
+            register(match[0].slice(b, e > 0 ? -e : undefined), idx,
+                match.index + b, match.index + match[0].length - e);
+        }
+        //const matches = ;
+        //if (matched !== null) for (let tag of matched) {
+        //}
+    }
+    return ret;
 }
 
 async function parse_tags(text) {
     // TODO: combine functions, add locational info to detect whether things are connected
     // TODO: parse the bullet tree with - and + syntax, count leading spaces and if theres a leading bulletchar
-    
-    let found_tags = {};
-    const register_tag = (tag, idx) => {
-        // TODO: also note the start/end positions for syntax highlighting
-        if (!found_tags.hasOwnProperty(tag))
-            found_tags[tag] = { lines: [] };
-        found_tags[tag].lines.push(idx);
-    }
 
-    for (let [idx, line] of text.split('\n').entries()) {
-        const matched = line.match(TAG_PATTERN);
-        if (matched !== null) for (let tag of matched) {
-            register_tag(tag.slice(tag[0] === ':' ? 1 : 2, tag.match(/\w$/) === null ? -1 : undefined), idx);
-        }
-    }
-    
-    return found_tags;
+    //let found_tags = {};
+    //const register_tag = (tag, idx) => {
+    //    // TODO: also note the start/end positions for syntax highlighting
+    //    if (!found_tags.hasOwnProperty(tag))
+    //        found_tags[tag] = { lines: [] };
+    //    found_tags[tag].lines.push(idx);
+    //}
+    //
+    //for (let [idx, line] of text.split('\n').entries()) {
+    //    const matched = line.match(TAG_PATTERN);
+    //}
+    //
+    //return found_tags;
+    return parse_with_regex(text, TAG_PATTERN,
+        x => x[0] === ':' ? 1 : 2,
+        x => x.match(/\w$/) === null ? 1 : 0
+    )
 }
 async function parse_relations(text) { return []; }
 
