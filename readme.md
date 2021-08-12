@@ -51,6 +51,12 @@ DEPRECATED:
     - relation instance
         - created
         - importance???? 
+- how to find entities
+    - strip whitespace -> keyword matching
+    - anything thats capitalized
+    - anything in brackets
+    - named entity recognition
+    - TF-IDF? how to chunk into terms?
 
 ### a note on stats
 - a line is considered to refer to all entities of the nearest de-indented above line with an entity/tag reference in it
@@ -99,12 +105,6 @@ DEPRECATED:
         - the subtype completion keyword maching example
         - spatial closeness (how many times do they appear within the same sentence/note)
         - temporal closenesss (how often are the mentioned within a few minutes/hours/days of eachother)
-    - how to find entities
-        - strip whitespace -> keyword matching
-        - anything thats capitalized
-        - anything in brackets
-        - named entity recognition
-        - TF-IDF? how to chunk into terms?
 
 - inspiration
     - Jacob Cole + Ideaflow: associative notes

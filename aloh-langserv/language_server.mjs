@@ -1,16 +1,31 @@
 // from https://www.toptal.com/javascript/language-server-protocol-tutorial
 
+import vscode_langserver from 'vscode-languageserver';
 const {
     createConnection,
-	TextDocuments,
-	DiagnosticSeverity,
-} = require('vscode-languageserver')
+    Diagnostic,
+    ProposedFeatures,
+    InitializeParams,
+    DidChangeConfigurationNotification,
+    CompletionItem,
+    CompletionItemKind,
+    TextDocumentPositionParams,
+    InitializeResult,
+    TextDocuments,
+    DiagnosticSeverity,
+    TextDocumentSyncKind,
+} = vscode_langserver;
 
-const { TextDocument } = require('vscode-languageserver-textdocument')
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
-var dbman = require('./dbman');
-var objman = await require('./objman');
+import m_url from 'url';
+import m_path from 'path'
 
+import dbman_init from './dbman.mjs';
+import objman_init from './objman.mjs';
+
+var dbman = null;
+var objman = null;
 
 const getBlacklisted = (text) => {
     const blacklist = [
@@ -44,14 +59,14 @@ const getDiagnostics = (textDocument) =>
 
 
 
-exports.connection = createConnection()
-const connection = exports.connection;
+export const connection = createConnection();
 const documents = new TextDocuments(TextDocument)
 
 connection.onInitialize(async (client_init_params) => {
     let root_dir = client_init_params.workspaceFolders[0].uri;
     if (!root_dir.startsWith('file://')) throw Error('unknown workspace uri');
-    dbman = dbman.init(root_dir.replace('file://', ''), connection);
+    dbman = dbman_init.init(root_dir.replace('file://', ''), connection);
+    objman = await objman_init;
     return {
         capabilities: {
             textDocumentSync: TextDocumentSyncKind.Full,
@@ -63,15 +78,25 @@ connection.onInitialize(async (client_init_params) => {
 });
 
 documents.onDidChangeContent(async change => {      // TODO: lots of race conditions here
-    const most_recent_text = change.contentChanges[change.contentChanges.length-1];
-    const file_id = change.uri; // TODO
+    const most_recent_text = change.document.getText();
+    const file_id = m_path.basename((new URL(change.document.uri)).pathname);   // TODO: remove .aloh extension?
 
-    objman.parseObjects(most_recent_text).then(dbman.setNoteObjects.apply(dbman, fileid));
-
-    //connection.sendDiagnostics({
-    //    uri: change.document.uri,
-    //    diagnostics: getDiagnostics(change.document),
-    //})
+    objman.parseObjects(most_recent_text)
+        .then(objs => {
+            dbman.setNoteObjects(file_id, objs);
+        });
+    connection.sendDiagnostics({
+        uri: change.document.uri,
+        diagnostics: [{
+            severity: DiagnosticSeverity.Warning,
+            range: {
+                start: { line: 0, position: 0 },
+                end: { line: 0, position: 1 },
+            },
+            message: `file_id is '${file_id}'`,
+            source: 'feedback',
+        }]
+    })
 })
 
 connection.onDidChangeWatchedFiles(async change => {
@@ -82,7 +107,13 @@ connection.onDidChangeWatchedFiles(async change => {
 
 connection.onCompletion(async textdocument_position => {
     connection.console.log(textdocument_position);
-    return await dbman.listEntities();   // TODO: whittle down the list a bit using textdocument_position
+    return (await dbman.getEntityList())
+        .map(name => ({
+            label: name,
+            kind: CompletionItemKind.Text,
+            data: name,
+        })
+    );   // TODO: whittle down the list a bit using textdocument_position
 });
 
 connection.onCompletionResolve(async (item) => {
