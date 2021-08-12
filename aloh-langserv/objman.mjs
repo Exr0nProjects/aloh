@@ -3,7 +3,10 @@
 const SOCKET_PORT = 62326;
 //const SPACY_MODEL = 'en_core_web_trf';
 const SPACY_MODEL = 'en_core_web_lg';
-const ENTITY_NOTATION = /\[[^\[\]]+\]/g;    // bracketed strings
+const RELATION_PATTERN  = /(\s|^)\.[\w\-]+\w\b/g        // period then \w + '-'
+const ENTITY_PATTERN    = /(\s|^)\[[^\[\]]+\](\W|$)/g   // bracketed strings
+const TAG_PATTERN       = /(\s|^):[\w\-\/]+\w\b/g       // colon then \w + '-'
+
 //const ALLOWLIST_NER_TYPES = [ 'FAC', 'GPE', 'PERSON', 'ORG', 'DATE', 'NORP', 'PRODUCT', 'EVENT', 'LOC', 'WORK_OF_ART' ]
 const DENYLIST_NER_TYPES = [ 'ORDINAL', 'CARDINAL', 'LAW', 'QUANTITY' ]
 
@@ -22,7 +25,7 @@ const socket = io(`http://localhost:${SOCKET_PORT}`)
 socket.on('disconnect', () => {
     launchSpacyServer();        // did the spacy server die
 });
-function launchSpacyServer() {
+function launchSpacyServer() {  // TODO: whats a clean solution for this?
     // spaghet
     //spawn('python3', ['-m', 'pip', 'install', '-r', 'requirements.txt']);
     //spawn('python3', ['spacy_server.py', SOCKET_PORT, SPACY_MODEL]);
@@ -43,10 +46,10 @@ async function parse_entities(text) {
     await Promise.all(
         Array.from(text.split('\n').entries(), ([idx, line]) => new Promise((resv, _rej) => {
             // check for square brackets
-            const matched = line.match(ENTITY_NOTATION)
+            const matched = line.match(ENTITY_PATTERN)
             if (matched !== null) for (const ent of matched)
                 register('marked', ent.slice(1, -1), idx);
-            line = line.replaceAll(ENTITY_NOTATION, '');
+            line = line.replaceAll(ENTITY_PATTERN, '');
             // check for existing entities
             for (const ent of entity_list) {
                 let og_len = line.length;
@@ -67,7 +70,36 @@ async function parse_entities(text) {
     return ret;
 }
 
-async function parse_tags(text) { return []; }
+async function parse_with_regex(text) {
+    let ret = {};
+    const register = (val, line, start, end) => {
+        if (!ret.hasOwnProperty(tag)) 
+            ret[val] = { refs: [] }
+        ret[val].lines.push([{ line:  }])
+    }
+}
+
+async function parse_tags(text) {
+    // TODO: combine functions, add locational info to detect whether things are connected
+    // TODO: parse the bullet tree with - and + syntax, count leading spaces and if theres a leading bulletchar
+    
+    let found_tags = {};
+    const register_tag = (tag, idx) => {
+        // TODO: also note the start/end positions for syntax highlighting
+        if (!found_tags.hasOwnProperty(tag))
+            found_tags[tag] = { lines: [] };
+        found_tags[tag].lines.push(idx);
+    }
+
+    for (let [idx, line] of text.split('\n').entries()) {
+        const matched = line.match(TAG_PATTERN);
+        if (matched !== null) for (let tag of matched) {
+            register_tag(tag.slice(tag[0] === ':' ? 1 : 2, tag.match(/\w$/) === null ? -1 : undefined), idx);
+        }
+    }
+    
+    return found_tags;
+}
 async function parse_relations(text) { return []; }
 
 const api = {
@@ -77,7 +109,7 @@ const api = {
 }
 export default (async () => {
     let socket_connect_timeout = setTimeout(() => { throw new Error('Socket server connection took too long to establish.') }, 10*1000);
-    let p = dbman_init(null, null);
+    let p = dbman_init();
     dbman = (await Promise.all([p, new Promise((res, _rej) => {
         socket.on('connect', () => {
             clearTimeout(socket_connect_timeout);

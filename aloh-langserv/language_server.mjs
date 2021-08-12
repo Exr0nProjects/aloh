@@ -25,8 +25,7 @@ import { appendFile } from 'fs/promises';
 import dbman_init from './dbman.mjs';
 import objman_init from './objman.mjs';
 
-//var dbman = dbman_init(root_dir.replace('file://', ''), connection);
-var dbman = dbman_init(null, null);
+var dbman = dbman_init();
 var objman = null;
 
 const getBlacklisted = (text) => {
@@ -88,18 +87,21 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
             for (let ent in objs[0]) {
                 objs[0][ent] = { file_id: file_id, lines: objs[0][ent].lines }
             }
+            for (let tag in objs[1]) {
+                objs[1][tag] = { file_id: file_id, lines: objs[1][tag].lines }
+            }
             dbman.setNoteObjects(file_id, objs);
         });
     connection.sendDiagnostics({
         uri: change.document.uri,
         diagnostics: [{
-            severity: DiagnosticSeverity.Warning,
+            severity: DiagnosticSeverity.Hint,
             range: {
                 start: { line: 0, position: 0 },
                 end: { line: 0, position: 1 },
             },
-            message: `file_id is '${file_id}'`,
-            source: 'feedback',
+            message: `Aloh is active here in '${file_id}'!`,
+            source: 'hint',
         }]
     })
 })

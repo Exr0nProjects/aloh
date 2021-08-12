@@ -12,17 +12,14 @@ class Entity {    // not a class because https://stackoverflow.com/a/28281845/10
     }
     // methods
     async set_mentions_by_file(file_id, mentions) {
-        //appendFile('/home/exr0n/snap/dbman.log', this.mentions.size + ' is the size of ' + this.name + '\n');
         if (mentions.length === 0) {
             this.mentions.delete(file_id);
             if (this.mentions.size === 0) {
                 db_entities.delete(this.name);
-                appendFile('/home/exr0n/snap/dbman.log', 'oofity boofity' + this.name + 'got yeetused\n');
             }
         } else {
             this.mentions.set(file_id, mentions);
         }
-        //appendFile('/home/exr0n/snap/dbman.log', this.mentions.size + ' is the size of ' + this.name + '\n');
     }
     toString() {
         return `<Entity ${this.name}, ${JSON.stringify(Object.fromEntries(this.mentions), null, 4)}>`
@@ -33,26 +30,18 @@ function load_entities() {
     // TODO
 }
 
-//export default async function() { return 3 };
-
-export default async function(workspace, connection) {
+export default async function(/* NOTE: should this take workspace as an arg */) {
     load_entities();
-    //let count =  0;
     return {
-        // TODO: all the functions here need to be plugged into the db
         getEntityList: async () => {
-            let ret = [];
-            for (let i=1; i<=10000; i++) {
-                ret.push(`amazing${i}`);
-            }
-            return ret;
+            return Array.from(db_entities.keys());  // TODO: add some metadata, eg. time or usage
         },
         getAkasForEntity: async (entity_name) => {
-            if (parseInt(entity_name.replace('amazing', '')) < 100) return ['thing1', 'thing2'];
+            if (db_entities.has(entity_name)) return ['thing1', 'thing2']; /* TODO: databaseify */
             else throw Error(`Entity ${entity_name} not found!`);
         },
         getReferenceForEntity: async (entity_name) => {
-            if (parseInt(entity_name.replace('amazing', '')) < 100) return `- .likes/Coco\n- .likes/cado\n`
+            if (db_entities.has(entity_name)) return `- .likes/Coco\n- .likes/cado\n`; // TODO: make the reference-generation code
             else throw Error(`Entity ${entity_name} not found!`);
         },
         setNoteObjects: async (file_id, objects) => {
@@ -60,17 +49,13 @@ export default async function(workspace, connection) {
             Object.entries(entities).forEach(([ent, { file_id, lines }]) => {
                 ent = ent.toString();
                 if (!db_entities.has(ent)) {
-                    appendFile('/home/exr0n/snap/dbman.log', 'NEW ENTITY ' + ent + '\n');
                     db_entities.set(ent, new Entity(ent));
                 }
                 db_entities.get(ent).set_mentions_by_file(file_id, lines)
                 // TODO: cache entities by file and delete them if they got changed
-                //appendFile('/home/exr0n/snap/dbman.log', 'entities ' + db_entities[ent] + '\n');
             })
-            //appendFile('/home/exr0n/snap/dbman.log', '\n\n\n');
-            //appendFile('/home/exr0n/snap/dbman.log', 'operation #' + count++ + '\n');
-            appendFile('/home/exr0n/snap/dbman.log', 'the map currently has' + db_entities.size + ' entities\n');
-            // TODO: do stuff with entities, tags, relations
+            appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(tags) + '\n\n');
+            // TODO: do stuff with tags, relations
         }
     };
 }
