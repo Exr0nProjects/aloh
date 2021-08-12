@@ -37,32 +37,33 @@ async function parse_entities(text) {
             ret[ent] = { source: src, lines: [] };
         ret[ent].lines.push(idx);
     }
-
-    for (let [idx, line] of text.split('\n').entries()) {
-        // check for square brackets
-        const matched = line.match(ENTITY_NOTATION)
-        if (matched !== null) for (const ent of matched)
-            register('marked', ent.slice(1, -1), idx);
-        line = line.replaceAll(ENTITY_NOTATION, '');
-        // check for existing entities
-        for (const ent of entity_list) {
-            let og_len = line.length;
-            line = line.replaceAll(ent, '');
-            if (line.length < og_len) {
-                register('existing', ent, idx);
+    await Promise.all(
+        Array.from(text.split('\n').entries(), ([idx, line]) => new Promise((resv, _rej) => {
+            // check for square brackets
+            const matched = line.match(ENTITY_NOTATION)
+            if (matched !== null) for (const ent of matched)
+                register('marked', ent.slice(1, -1), idx);
+            line = line.replaceAll(ENTITY_NOTATION, '');
+            // check for existing entities
+            for (const ent of entity_list) {
+                let og_len = line.length;
+                line = line.replaceAll(ent, '');
+                if (line.length < og_len) {
+                    register('existing', ent, idx);
+                }
             }
-        }
-        // SpaCy NER TODO: not very useful
-        socket.emit('parse_NER', line, (res) => {
-            const got = res.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
-            for (let [ent, _type] of got) {
-                appendFile('/home/exr0n/snap/dbman.log', 'NER got: ' + ent + '\n');
-                register('NER', ent, idx);
-            }
-            //got.forEach(x => register('NER', x[0], idx));
-        });
-        // TODO: important terms detection
-    }
+            // SpaCy NER TODO: not very useful
+            socket.emit('parse_NER', line, (resp) => {
+                const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
+                //for (let [ent, _type] of got) {
+                //    register('NER', ent, idx);
+                //}
+                got.forEach(x => register('NER', x[0], idx));
+                resv();
+            });
+            // TODO: important terms detection
+        }))
+    );
     return ret;
 }
 
