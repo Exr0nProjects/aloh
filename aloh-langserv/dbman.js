@@ -24,6 +24,9 @@ class Entity {    // not a class because https://stackoverflow.com/a/28281845/10
     async set_mentions_by_file(updates) {
         for (const [n, m] of Object.entries(updates))
             this.mentions.set(n, m);
+        if (this.mentions.size === 0) {
+            // TODO: remove this entity from the list
+        }
     }
 }
 module.exports = {
