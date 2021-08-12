@@ -66,12 +66,15 @@ connection.onInitialize(async (client_init_params) => {
 
 documents.onDidChangeContent(async change => {      // TODO: lots of race conditions here
     const most_recent_text = change.contentChanges[change.contentChanges.length-1];
+    const file_id = change.uri; // TODO
 
-    let [ entities, tags, relations ] = await Promise.all(
-        objman.parse_entities(most_recent_text),    // these modify the DB state
-        objman.parse_tags(most_recent_text),
-        objman.parse_relations(most_recent_text)
-    );
+    //let [ entities, tags, relations ] = await Promise.all(
+    //    objman.parse_entities(most_recent_text),    // these modify the DB state
+    //    objman.parse_tags(most_recent_text),
+    //    objman.parse_relations(most_recent_text)
+    //);
+
+    objman.parseObjects(most_recent_text).then(dbman.setNoteObjects.apply(dbman, fileid));
 
     //connection.sendDiagnostics({
     //    uri: change.document.uri,
