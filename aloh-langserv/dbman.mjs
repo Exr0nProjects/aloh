@@ -19,8 +19,16 @@ class Entity {    // not a class because https://stackoverflow.com/a/28281845/10
         }
     }
 }
-export default {
-    init: (workspace, connection) => ({
+var entities = new Map();
+function load_entities() {
+    // TODO
+}
+
+//export default async function() { return 3 };
+
+export default async function(workspace, connection) {
+    load_entities();
+    return {
         // TODO: all the functions here need to be plugged into the db
         getEntityList: async () => {
             let ret = [];
@@ -40,8 +48,10 @@ export default {
         setNoteObjects: async (file_id, objects) => {
             const [ entities, tags, relations ] = objects;
             appendFile('/home/exr0n/snap/dbman.log', 'entities:\n' + JSON.stringify(entities, null, 2) + '\n\n\n');
+            //entities.entries().forEach(([ent, { lines }]) => {
+            //
+            //})
             // TODO: do stuff with entities, tags, relations
         }
-    })
-};
-
+    };
+}

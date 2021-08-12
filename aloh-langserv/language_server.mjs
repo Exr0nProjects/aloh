@@ -18,13 +18,15 @@ const {
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-import m_url from 'url';
-import m_path from 'path'
+//import { fileURLToPath } from 'url';
+import { basename } from 'path'
+import { appendFile } from 'fs/promises';
 
 import dbman_init from './dbman.mjs';
 import objman_init from './objman.mjs';
 
-var dbman = null;
+//var dbman = dbman_init(root_dir.replace('file://', ''), connection);
+var dbman = dbman_init(null, null);
 var objman = null;
 
 const getBlacklisted = (text) => {
@@ -65,7 +67,7 @@ const documents = new TextDocuments(TextDocument)
 connection.onInitialize(async (client_init_params) => {
     let root_dir = client_init_params.workspaceFolders[0].uri;
     if (!root_dir.startsWith('file://')) throw Error('unknown workspace uri');
-    dbman = dbman_init.init(root_dir.replace('file://', ''), connection);
+    dbman = (await dbman);
     objman = await objman_init;
     return {
         capabilities: {
@@ -79,10 +81,14 @@ connection.onInitialize(async (client_init_params) => {
 
 documents.onDidChangeContent(async change => {      // TODO: lots of race conditions here
     const most_recent_text = change.document.getText();
-    const file_id = m_path.basename((new URL(change.document.uri)).pathname);   // TODO: remove .aloh extension?
+    const file_id = basename((new URL(change.document.uri)).pathname);   // TODO: remove .aloh extension?
 
     objman.parseObjects(most_recent_text)
         .then(objs => {
+            for (let ent in objs[0]) {
+                objs[0][ent] = { file_id: file_id, lines: objs[0][ent].lines }
+            }
+            appendFile('/home/exr0n/snap/dbman.log', 'entities:\n' + JSON.stringify(objs[0].entries, null, 2) + '\n\n\n');
             dbman.setNoteObjects(file_id, objs);
         });
     connection.sendDiagnostics({
@@ -101,12 +107,12 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
 
 connection.onDidChangeWatchedFiles(async change => {
     // Monitored files have change in VSCode
-    connection.console.log('We received an file change event');
-    connection.console.log(change);
+    //connection.console.log('We received an file change event');
+    //connection.console.log(change);
 });
 
 connection.onCompletion(async textdocument_position => {
-    connection.console.log(textdocument_position);
+    //connection.console.log(textdocument_position);
     return (await dbman.getEntityList())
         .map(name => ({
             label: name,
