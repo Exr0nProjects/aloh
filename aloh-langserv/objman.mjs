@@ -38,7 +38,7 @@ async function parse_entities(text) {
     let entity_list = await dbman.getEntityList();  // TODO: could optimize this by maintaining a trie
 
     const register = (src, ent, idx) => {
-        // TODO: also note the start/end positions for syntax highlighting
+        // TODO: use parse_with_regex
         if (!ret.hasOwnProperty(ent))
             ret[ent] = { source: src, lines: [] };
         ret[ent].lines.push(idx);
@@ -51,6 +51,7 @@ async function parse_entities(text) {
                 register('marked', ent.slice(1, -1), idx);
             line = line.replaceAll(ENTITY_PATTERN, '');
             // check for existing entities
+            // TODO: sort and search by longest first
             for (const ent of entity_list) {
                 let og_len = line.length;
                 line = line.replaceAll(ent, '');
@@ -78,19 +79,11 @@ async function parse_with_regex(text, pattern, ignore_beg, ignore_end) {
         ret[val].refs.push([{ line: line, start: start, end: end }])
     }
     for (let [idx, line] of text.split('\n').entries()) {
-        //while ((match = pattern.exec(line)) != null) {
-        //    let [ b, e ] = [ ignore_beg(tag), ignore_end(tag) ];
-        //    register_tag(tag.slice(b, e), idx,
-        //        match.index + b, match.index + match[0].length - e + 1);
-        //}
         for (const match of line.matchAll(pattern)) {
             let [ b, e ] = [ ignore_beg(match[0]), ignore_end(match[0]) ];
             register(match[0].slice(b, e > 0 ? -e : undefined), idx,
                 match.index + b, match.index + match[0].length - e);
         }
-        //const matches = ;
-        //if (matched !== null) for (let tag of matched) {
-        //}
     }
     return ret;
 }
@@ -98,26 +91,17 @@ async function parse_with_regex(text, pattern, ignore_beg, ignore_end) {
 async function parse_tags(text) {
     // TODO: combine functions, add locational info to detect whether things are connected
     // TODO: parse the bullet tree with - and + syntax, count leading spaces and if theres a leading bulletchar
-
-    //let found_tags = {};
-    //const register_tag = (tag, idx) => {
-    //    // TODO: also note the start/end positions for syntax highlighting
-    //    if (!found_tags.hasOwnProperty(tag))
-    //        found_tags[tag] = { lines: [] };
-    //    found_tags[tag].lines.push(idx);
-    //}
-    //
-    //for (let [idx, line] of text.split('\n').entries()) {
-    //    const matched = line.match(TAG_PATTERN);
-    //}
-    //
-    //return found_tags;
     return parse_with_regex(text, TAG_PATTERN,
         x => x[0] === ':' ? 1 : 2,
-        x => x.match(/\w$/) === null ? 1 : 0
-    )
+        x => x.match(/\w$/) !== null ? 0 : 1
+    );
 }
-async function parse_relations(text) { return []; }
+async function parse_relations(text) {
+    return parse_with_regex(text, RELATION_PATTERN,
+        x => x[0] === '.' ? 1 : 2,
+        x => x.match(/\w$/) !== null ? 0 : 1
+    );
+}
 
 const api = {
     parseObjects: async (text) => {

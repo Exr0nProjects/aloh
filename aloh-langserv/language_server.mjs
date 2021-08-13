@@ -84,12 +84,9 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
 
     objman.parseObjects(most_recent_text)
         .then(objs => {
-            for (let ent in objs[0]) {
-                objs[0][ent] = { file_id: file_id, lines: objs[0][ent].lines }
-            }
-            for (let tag in objs[1]) {
-                objs[1][tag] = { file_id: file_id, lines: objs[1][tag].lines }
-            }
+            //for (let group in objs) for (let obj in group) {
+            //    Object.assign(group[obj], { file_id: file_id })
+            //}
             dbman.setNoteObjects(file_id, objs);
         });
     connection.sendDiagnostics({

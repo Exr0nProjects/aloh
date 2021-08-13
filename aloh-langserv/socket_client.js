@@ -10,7 +10,8 @@ socket.on('connect', () => {
     console.log(socket.id);
     let data = process.argv.slice(2).join(' ');
     console.log('requesting', data)
-    socket.emit('parse_chunks', data, (amazing) => {
+    //socket.emit('parse_chunks', data, (amazing) => {
+    socket.emit('parse_NER', data, (amazing) => {
         //console.log('response recieved!');
         console.log(amazing);
         //socket.disconnect();
