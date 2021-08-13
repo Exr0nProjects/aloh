@@ -50,6 +50,11 @@ class Rel extends Item {
 var db_ents = new Map();
 var db_tags = new Map();
 var db_rels = new Map();
+var databases = {
+    'ents': db_ents,
+    'tags': db_tags,
+    'rels': db_rels,
+}
 function load_entities() {
     // TODO
 }
@@ -60,34 +65,30 @@ function file_log(text) {
 
 export default async function(/* NOTE: should this take workspace as an arg */) {
     load_entities();
-    let tag = new Tag('test');
     return {
         getEntityList: async () => {
-            return Array.from(db_ents.keys());  // TODO: add some metadata, eg. time or usage
+            // TODO: add some metadata, eg. time or usage
+            appendFile('/home/exr0n/snap/dbman.log', 'getting entity list...' + Date.now() + '\n')
+            let ret = [];
+            for (let [type, db] of Object.entries(databases))
+                ret += Array.from(db.keys()).map(x => ({ name: x, type: type }))
+            appendFile('/home/exr0n/snap/dbman.log', `entity list complete ${ret.length} total entities` + Date.now() + '\n')
+            return ret;
         },
-        getAkasForEntity: async (entity_name) => {
-            if (db_entities.has(entity_name)) return ['thing1', 'thing2']; /* TODO: databaseify */
-            else throw Error(`Entity ${entity_name} not found!`);
+        getItemBlurb: async (type, name) => {
+            if (databases[type].has(name)) return databases[type].get(name).getBlurb();
+            else throw Error(`<${type}> ${entity_name} not found!`);
         },
-        getReferenceForEntity: async (entity_name) => {
-            if (db_entities.has(entity_name)) return `- .likes/Coco\n- .likes/cado\n`; // TODO: make the reference-generation code
-            else throw Error(`Entity ${entity_name} not found!`);
+        getItemDescription: async (type, name) => {
+            if (databases[type].has(name)) return `- .likes/Coco\n- .likes/cado\n`; // TODO: make the reference-generation code
+            else throw Error(`<${type}> ${entity_name} not found!`);
         },
         setNoteObjects: async (file_id, objects) => {
-            //const [ entities, tags, relations ] = objects;
-            //Object.entries(entities).forEach(([ent, { file_id, lines }]) => {
-            //    ent = ent.toString();
-            //    if (!db_entities.has(ent)) {
-            //        db_entities.set(ent, new Entity(ent));
-            //    }
-            //    db_entities.get(ent).set_mentions_by_file(file_id, lines)
-            //    // TODO: cache entities by file and delete them if they got changed
-            //})
-
             // TODO: dry
+            file_log(`transforming for db input...\n`)
             const [ entities, tags, relations ] = objects;
             Object.entries(entities).forEach(([ent, refs]) => {
-                if (!db_ents.has(ent)) db_rels.set(ent, new Rel(ent));
+                if (!db_ents.has(ent)) db_ents.set(ent, new Rel(ent));
                 db_ents.get(ent).set_refs_by_file(file_id, refs);
             })
             Object.entries(tags).forEach(([tag, refs]) => {
@@ -98,11 +99,10 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
                 if (!db_rels.has(rel)) db_rels.set(rel, new Rel(rel));
                 db_rels.get(rel).set_refs_by_file(file_id, refs);
             })
-            file_log(`tags: ${Array.from(db_tags.keys()).join(', ')}\nentities: ${Array.from(db_entities.keys()).join(', ')}\nrelations: ${Array.from(db_rels.keys()).join(', ')}\n`)
+            file_log(`tags: ${Array.from(db_tags.keys()).join(', ')}\nentities: ${Array.from(db_ents.keys()).join(', ')}\nrelations: ${Array.from(db_rels.keys()).join(', ')}\n`)
             //appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(entities) + '\n');
             //appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(tags) + '\n\n');
             //appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(relations) + '\n\n');
-            // TODO: do stuff with tags, relations
         }
     };
 }

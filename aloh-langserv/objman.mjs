@@ -62,7 +62,6 @@ async function parse_entities(text) {
         Array.from(text.split('\n').entries(), ([idx, line]) => new Promise((resv, _rej) => {
             let og_len = line.length;
             line = line.replaceAll(ENTITY_PATTERN, match => ' '.repeat(match.length));
-            assert(og_len == line.length)
 
             // check for existing entities
             // TODO: sort and search by longest first
@@ -84,9 +83,7 @@ async function parse_entities(text) {
             // SpaCy NER TODO: not very useful
             socket.emit('parse_NER', line, (resp) => {
                 const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
-                let toks = line.split(' ');
-                x[2], x[3]
-                got.forEach(x => register(x[0], idx, ));
+                got.forEach(x => register(x[0], idx, x[2], x[3]));
                 resv();
             });
             // TODO: important terms detection
