@@ -34,35 +34,59 @@ function launchSpacyServer() {  // TODO: whats a clean solution for this?
 }
 
 async function parse_entities(text) {
-    let ret = {  }; // elements are name: { source: "str", lines: [] }
+    // check for square brackets
+    let ret = parse_with_regex(text, ENTITY_PATTERN,
+        x => x[0] === '[' ? 1 : 2,
+        x => x[x.length-1] == ']' ? 1 : 2
+    )
+
+    const register = (val, line, start, end) => {
+        if (!ret.hasOwnProperty(val)) 
+            ret[val] = { refs: [] }
+        ret[val].refs.push([{ line: line, start: start, end: end }])
+    }
+
+    //const register = (src, ent, idx) => {
+    //    // TODO: use parse_with_regex
+    //    if (!ret.hasOwnProperty(ent))
+    //        ret[ent] = { source: src, lines: [] };
+    //    ret[ent].lines.push(idx);
+    //}
     let entity_list = await dbman.getEntityList();  // TODO: could optimize this by maintaining a trie
 
-    const register = (src, ent, idx) => {
-        // TODO: use parse_with_regex
-        if (!ret.hasOwnProperty(ent))
-            ret[ent] = { source: src, lines: [] };
-        ret[ent].lines.push(idx);
-    }
+    //function escapeRegExp(string) {     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
+    //    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+    //}
+
     await Promise.all(
         Array.from(text.split('\n').entries(), ([idx, line]) => new Promise((resv, _rej) => {
-            // check for square brackets
-            const matched = line.match(ENTITY_PATTERN)
-            if (matched !== null) for (const ent of matched)
-                register('marked', ent.slice(1, -1), idx);
-            line = line.replaceAll(ENTITY_PATTERN, '');
+            let og_len = line.length;
+            line = line.replaceAll(ENTITY_PATTERN, match => ' '.repeat(match.length));
+            assert(og_len == line.length)
+
             // check for existing entities
             // TODO: sort and search by longest first
             for (const ent of entity_list) {
-                let og_len = line.length;
-                line = line.replaceAll(ent, '');
-                if (line.length < og_len) {
-                    register('existing', ent, idx);
+                for (let pos = line.indexOf(ent); pos >= 0; pos++) {
+                    register(ent, idx, pos, pos+ent.length);
+                    pos = line.indexOf(ent);
                 }
+                line = line.replace(ent, match => ' '.repeat(match.length));
             }
+
+            //for (const ent of entity_list) {
+            //    let og_len = line.length;
+            //    line = line.replaceAll(ent, '');
+            //    if (line.length < og_len) {
+            //        register('existing', ent, idx);
+            //    }
+            //}
             // SpaCy NER TODO: not very useful
             socket.emit('parse_NER', line, (resp) => {
                 const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
-                got.forEach(x => register('NER', x[0], idx));
+                let toks = line.split(' ');
+                x[2], x[3]
+                got.forEach(x => register(x[0], idx, ));
                 resv();
             });
             // TODO: important terms detection

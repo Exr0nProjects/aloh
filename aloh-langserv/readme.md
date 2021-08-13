@@ -14,6 +14,7 @@ python3 -m spacy download en_core_web_lg
 - database
 - always chooses the default workspace folder
 - ignores subfolders when calculating file_id
+- deal with spaces vs tabs when parsing bullets / indexing
 - how to deal with name conflicts (eg. Braid (protocol) vs Braid (game))
     - trellick from the Ideaflow slack uses wiki-style parens 
     + but you don't want to have those in ur writing everywhere

@@ -54,7 +54,11 @@ def span_is_interesting(span):
 # event handler to run NER
 @sio.event
 def parse_NER(_, data):
-    return [(ent.text, ent.label_) for ent in nlp(data).ents]     # TODO: should this server deal with deduplication?
+    lens = [len(s) for s in data.replace(r'	', '  ').split(' ')]
+    return [(ent.text, ent.label_,
+             sum(lens[:ent.start]) + ent.start,
+             sum(lens[:ent.end]) + ent.end - 1 - ent.text.count(r'	'))
+            for ent in nlp(data).ents]     # TODO: should this server deal with deduplication?
 
 @sio.event
 def parse_chunks(_, data):

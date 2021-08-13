@@ -47,9 +47,9 @@ class Rel extends Item {
     }
 }
 
-var db_entities = new Map();
-var db_tags     = new Map();
-var db_rels     = new Map();
+var db_ents = new Map();
+var db_tags = new Map();
+var db_rels = new Map();
 function load_entities() {
     // TODO
 }
@@ -63,7 +63,7 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
     let tag = new Tag('test');
     return {
         getEntityList: async () => {
-            return Array.from(db_entities.keys());  // TODO: add some metadata, eg. time or usage
+            return Array.from(db_ents.keys());  // TODO: add some metadata, eg. time or usage
         },
         getAkasForEntity: async (entity_name) => {
             if (db_entities.has(entity_name)) return ['thing1', 'thing2']; /* TODO: databaseify */
@@ -84,7 +84,12 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
             //    // TODO: cache entities by file and delete them if they got changed
             //})
 
+            // TODO: dry
             const [ entities, tags, relations ] = objects;
+            Object.entries(entities).forEach(([ent, refs]) => {
+                if (!db_ents.has(ent)) db_rels.set(ent, new Rel(ent));
+                db_ents.get(ent).set_refs_by_file(file_id, refs);
+            })
             Object.entries(tags).forEach(([tag, refs]) => {
                 if (!db_tags.has(tag)) db_tags.set(tag, new Tag(tag));
                 db_tags.get(tag).set_refs_by_file(file_id, refs);
