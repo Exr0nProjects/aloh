@@ -73,13 +73,6 @@ async function parse_entities(text) {
                 line = line.replace(ent, match => ' '.repeat(match.length));
             }
 
-            //for (const ent of entity_list) {
-            //    let og_len = line.length;
-            //    line = line.replaceAll(ent, '');
-            //    if (line.length < og_len) {
-            //        register('existing', ent, idx);
-            //    }
-            //}
             // SpaCy NER TODO: not very useful
             socket.emit('parse_NER', line, (resp) => {
                 const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));

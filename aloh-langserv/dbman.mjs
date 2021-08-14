@@ -55,6 +55,8 @@ var databases = {
     'tags': db_tags,
     'rels': db_rels,
 }
+var prev_objs_by_file = new Map();
+
 function load_entities() {
     // TODO
 }
@@ -85,20 +87,29 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
         },
         setNoteObjects: async (file_id, objects) => {
             // TODO: dry
-            file_log(`transforming for db input...\n`)
+            file_log(`transforming for db input...`)
             const [ entities, tags, relations ] = objects;
+            //// add new entities
             Object.entries(entities).forEach(([ent, refs]) => {
-                if (!db_ents.has(ent)) db_ents.set(ent, new Rel(ent));
-                db_ents.get(ent).set_refs_by_file(file_id, refs);
+                file_log(`    entity: ${ent}`);
+                //if (!db_ents.has(ent)) db_ents.set(ent, new Rel(ent));
+                //db_ents.get(ent).set_refs_by_file(file_id, refs);
             })
-            Object.entries(tags).forEach(([tag, refs]) => {
-                if (!db_tags.has(tag)) db_tags.set(tag, new Tag(tag));
-                db_tags.get(tag).set_refs_by_file(file_id, refs);
-            })
-            Object.entries(relations).forEach(([rel, refs]) => {
-                if (!db_rels.has(rel)) db_rels.set(rel, new Rel(rel));
-                db_rels.get(rel).set_refs_by_file(file_id, refs);
-            })
+            //Object.entries(tags).forEach(([tag, refs]) => {
+            //    if (!db_tags.has(tag)) db_tags.set(tag, new Tag(tag));
+            //    db_tags.get(tag).set_refs_by_file(file_id, refs);
+            //})
+            //Object.entries(relations).forEach(([rel, refs]) => {
+            //    if (!db_rels.has(rel)) db_rels.set(rel, new Rel(rel));
+            //    db_rels.get(rel).set_refs_by_file(file_id, refs);
+            //})
+            //// remove existing entities
+            //if (prev_objs_by_file.has(file_id)) {
+            //    for (const [db, names] of Object.entries(prev_objs_by_file.get(file_id))) 
+            //        for (const obj of names)
+            //            if (!objs[db].includes(obj))
+            //                databases[db].get(obj)?.refs.delete(file_id)
+            //}
             file_log(`tags: ${Array.from(db_tags.keys()).join(', ')}\nentities: ${Array.from(db_ents.keys()).join(', ')}\nrelations: ${Array.from(db_rels.keys()).join(', ')}\n`)
             //appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(entities) + '\n');
             //appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(tags) + '\n\n');

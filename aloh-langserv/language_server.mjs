@@ -95,18 +95,18 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
             dbman.setNoteObjects(file_id, objs)
                 .then(() => { appendFile('/home/exr0n/snap/dbman.log', 'saved to database' + Date.now() + '\n') });
         });
-    connection.sendDiagnostics({
-        uri: change.document.uri,
-        diagnostics: [{
-            severity: DiagnosticSeverity.Hint,
-            range: {
-                start: { line: 0, position: 0 },
-                end: { line: 0, position: 1 },
-            },
-            message: `Aloh is active here in '${file_id}'!`,
-            source: 'hint',
-        }]
-    })
+    //connection.sendDiagnostics({
+    //    uri: change.document.uri,
+    //    diagnostics: [{
+    //        severity: DiagnosticSeverity.Hint,
+    //        range: {
+    //            start: { line: 0, position: 0 },
+    //            end: { line: 0, position: 1 },
+    //        },
+    //        message: `Aloh is active here in '${file_id}'!`,
+    //        source: 'hint',
+    //    }]
+    //})
 })
 
 connection.onDidChangeWatchedFiles(async change => {
