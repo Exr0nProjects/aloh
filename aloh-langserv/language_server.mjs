@@ -28,6 +28,9 @@ import objman_init from './objman.mjs';
 var dbman = dbman_init();
 var objman = null;
 
+const DB_INTERVAL = 1000;
+var prev_db_timestamp = 0;
+
 const getBlacklisted = (text) => {
     const blacklist = [
         'foo',
@@ -79,35 +82,35 @@ connection.onInitialize(async (client_init_params) => {
 });
 
 documents.onDidChangeContent(async change => {      // TODO: lots of race conditions here
-    appendFile('/home/exr0n/snap/dbman.log', 'on did change file' + Date.now() + '\n')
-
     const most_recent_text = change.document.getText();
     const file_id = basename((new URL(change.document.uri)).pathname);   // TODO: remove .aloh extension?
 
-    appendFile('/home/exr0n/snap/dbman.log', 'got text' + Date.now() + '\n')
-
-    objman.parseObjects(most_recent_text)
-        .then(objs => {
-            appendFile('/home/exr0n/snap/dbman.log', 'parsed objects' + Date.now() + '\n')
-            //for (let group in objs) for (let obj in group) {
-            //    Object.assign(group[obj], { file_id: file_id })
-            //}
-            dbman.setNoteObjects(file_id, objs)
-                .then(() => { appendFile('/home/exr0n/snap/dbman.log', 'saved to database' + Date.now() + '\n') });
-        });
-    //connection.sendDiagnostics({
-    //    uri: change.document.uri,
-    //    diagnostics: [{
-    //        severity: DiagnosticSeverity.Hint,
-    //        range: {
-    //            start: { line: 0, position: 0 },
-    //            end: { line: 0, position: 1 },
-    //        },
-    //        message: `Aloh is active here in '${file_id}'!`,
-    //        source: 'hint',
-    //    }]
-    //})
-})
+    //if (Date.now() - prev_db_timestamp >= DB_INTERVAL) {
+    //    appendFile('/home/exr0n/snap/dbman.log', 'got text' + Date.now() + '\n')
+    //    prev_db_timestamp = Date.now();
+    //    objman.parseObjects(most_recent_text)
+    //        .then(objs => {
+    //            appendFile('/home/exr0n/snap/dbman.log', 'parsed objects' + Date.now() + '\n')
+    //            //for (let group in objs) for (let obj in group) {
+    //            //    Object.assign(group[obj], { file_id: file_id })
+    //            //}
+    //            dbman.setNoteObjects(file_id, objs)
+    //                .then(() => { appendFile('/home/exr0n/snap/dbman.log', 'saved to database' + Date.now() + '\n') });
+    //        });
+    //    //connection.sendDiagnostics({
+    //    //    uri: change.document.uri,
+    //    //    diagnostics: [{
+    //    //        severity: DiagnosticSeverity.Hint,
+    //    //        range: {
+    //    //            start: { line: 0, position: 0 },
+    //    //            end: { line: 0, position: 1 },
+    //    //        },
+    //    //        message: `Aloh is active here in '${file_id}'!`,
+    //    //        source: 'hint',
+    //    //    }]
+    //    //})
+    //}
+});
 
 connection.onDidChangeWatchedFiles(async change => {
     // Monitored files have change in VSCode
@@ -117,11 +120,19 @@ connection.onDidChangeWatchedFiles(async change => {
 
 connection.onCompletion(async textdocument_position => {
     //connection.console.log(textdocument_position);
-    return ['Huxley Marvit', 'Jacob Cole'].map(item => ({
-        label: item,
-        kind: CompletionItemKind.Text,
-        data: 'ent',
-    }))
+    //return ['Huxley Marvit', 'Jacob Cole'].map(item => ({
+    //    label: item,
+    //    kind: CompletionItemKind.Text,
+    //    data: 'ent',
+    //}))
+
+    return (await dbman.getEntityList())
+        .map(item => ({
+            label: item,
+            kind: CompletionItemKind.Text,
+            data: { type: 'ents' },
+        })
+    );   // TODO: whittle down the list a bit using textdocument_position
     //return (await dbman.getEntityList())
     //    .map(item => ({
     //        label: item.name,
@@ -132,11 +143,11 @@ connection.onCompletion(async textdocument_position => {
 });
 
 connection.onCompletionResolve(async (item) => {
-    item.detail = await dbman.getItemBlurb(item.data.type, item.name)
-        .catch(err => err.toString());
-    item.documentation = await dbman.getItemDescription(item.data.type, item.data)
-        .catch(err => err.toString());
+    //item.detail = await dbman.getItemBlurb(item.data.type, item.name)
+    //    .catch(err => err.toString());
+    //item.documentation = await dbman.getItemDescription(item.data.type, item.data)
+    //    .catch(err => err.toString());
     return item;
 });
 
-documents.listen(connection)
+documents.listen(connection);
