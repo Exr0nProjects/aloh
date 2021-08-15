@@ -1,7 +1,6 @@
 // for now we will re-sweep the entire directory every time. then, move to re-sweeping on launch and finally an actual DB
 'use strict';
 
-import { appendFile } from 'fs/promises';
 import { hasOwn, file_log } from './util.mjs'
 
 class Item {
@@ -99,6 +98,8 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
         setNoteObjects: async (file_id, objects) => {
             const objs = { ent: objects[0], tag: objects[1], rel: objects[2] };
 
+            file_log(`got entities ${JSON.stringify(objects[0], null, 2)}`)
+
             // add new entities
             for (const [type, things] of Object.entries(objs)) {
                 Object.entries(things).forEach(([name, refs]) => {
@@ -121,7 +122,7 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
             prev_objs_by_file[file_id] = objs;
 
             // show the database
-            //file_log('\n\n\n\nUPDATE DATABASE\n')
+            //file_log('\n\nUPDATE DATABASE\n')
             //for (const [type, db] of Object.entries(databases))
             //    file_log(`${type}: ${Array.from(Object.keys(db)).join(', ')}`)
         }

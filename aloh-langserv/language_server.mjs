@@ -23,6 +23,7 @@ import { appendFile } from 'fs/promises';
 
 import dbman_init from './dbman.mjs';
 import objman_init from './objman.mjs';
+import { file_log } from './util.mjs'
 
 var dbman = dbman_init();
 var objman = null;
@@ -85,7 +86,11 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
     if (Date.now() - prev_db_timestamp >= DB_INTERVAL) setTimeout(() => {
         prev_db_timestamp = Date.now();
         objman.parseObjects(most_recent_text)
-            .then(objs => { dbman.setNoteObjects(file_id, objs) });
+            .then(objs => {
+ 
+                file_log(`got entities ${JSON.stringify(objs[0], null, 2)}`)
+                dbman.setNoteObjects(file_id, objs)
+            });
 
         //connection.sendDiagnostics({
         //    uri: change.document.uri,

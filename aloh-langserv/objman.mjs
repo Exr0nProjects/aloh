@@ -41,47 +41,44 @@ async function parse_entities(text) {
         x => x[0] === '[' ? 1 : 2,
         x => x[x.length-1] == ']' ? 1 : 2
     )
+    text = text.replaceAll(ENTITY_PATTERN,      match => ' '.repeat(match.length));
+    text = text.replaceAll(TAG_PATTERN,         match => ' '.repeat(match.length));
+    text = text.replaceAll(RELATION_PATTERN,    match => ' '.repeat(match.length));
 
     const register = (val, line, start, end) => {
-        if (!hasOwn(ret.val)) 
-            ret[val] = { refs: [] }
-        ret[val].refs.push([{ line: line, start: start, end: end }])
+        if (!hasOwn(ret, val)) ret[val] = { refs: [] }
+        ret[val].refs.push({ line: line, start: start, end: end })
+        file_log(`${val} now has ${ret[val].refs.length} references in this file`)
     }
 
-    //const register = (src, ent, idx) => {
-    //    // TODO: use parse_with_regex
-    //    if (!hasOwn(ret, ent))
-    //        ret[ent] = { source: src, lines: [] };
-    //    ret[ent].lines.push(idx);
-    //}
-    let entity_list = await dbman.getEntityNames();  // TODO: could optimize this by maintaining a trie
+    const entity_list = await dbman.getEntityNames();
 
-    //function escapeRegExp(string) {     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
-    //    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-    //}
+    for (let [idx, line] of Array.from(text.split('\n').entries())) {
+        // check for existing entities
+        // TODO: sort and search by longest first
+        // TODO: could optimize this by maintaining a trie
+        file_log(`eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`)
+        for (const ent of entity_list) {
+            file_log(`testing '${line}' for ${ent} ${line.indexOf(ent)}`)
+            for (let pos = line.indexOf(ent); pos >= 0; pos = line.indexOf(ent, pos+1)) {
+        //        file_log(`at line ${idx} pos ${ent}`)
+                register(ent, idx, pos, pos+ent.length);
+            }
+        //    line = line.replace(ent, match => ' '.repeat(match.length));
+        }
+    }
 
-    // TODO: this await is bork
+    file_log(`returning entities ${JSON.stringify(ret, null, 2)}`)
+
+    //// TODO: this await is bork
     //await Promise.all(
     //    Array.from(text.split('\n').entries(), ([idx, line]) => new Promise((resv, _rej) => {
-    //        let og_len = line.length;
-    //        line = line.replaceAll(ENTITY_PATTERN, match => ' '.repeat(match.length));
-    //
-    //        // check for existing entities
-    //        // TODO: sort and search by longest first
-    //        for (const ent of entity_list) {
-    //            for (let pos = line.indexOf(ent); pos >= 0; pos++) {
-    //                register(ent, idx, pos, pos+ent.length);
-    //                pos = line.indexOf(ent);
-    //            }
-    //            line = line.replace(ent, match => ' '.repeat(match.length));
-    //        }
-    //
-    //        // SpaCy NER TODO: not very useful
-    //        socket.emit('parse_NER', line, (resp) => {
-    //            const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
-    //            got.forEach(x => register(x[0], idx, x[2], x[3]));
-    //            resv();
-    //        });
+    //        //// SpaCy NER TODO: not very useful
+    //        //socket.emit('parse_NER', line, (resp) => {
+    //        //    const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
+    //        //    got.forEach(x => register(x[0], idx, x[2], x[3]));
+    //        //    resv();
+    //        //});
     //        // TODO: important terms detection
     //    }))
     //);
@@ -91,9 +88,8 @@ async function parse_entities(text) {
 async function parse_with_regex(text, pattern, ignore_beg, ignore_end) {
     let ret = {};
     const register = (val, line, start, end) => {
-        if (!hasOwn(ret, val)) 
-            ret[val] = { refs: [] }
-        ret[val].refs.push([{ line: line, start: start, end: end }])
+        if (!hasOwn(ret, val)) ret[val] = { refs: [] }
+        ret[val].refs.push({ line: line, start: start, end: end })
     }
     for (let [idx, line] of text.split('\n').entries()) {
         for (const match of line.matchAll(pattern)) {

@@ -61,6 +61,11 @@ ms@2.1.2:
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.2.tgz#d09d1f357b443f493382a8eb3ccd183872ae6009"
   integrity sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==
 
+neon@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/neon/-/neon-2.0.0.tgz#eb70092c57fb03e2201c3682aed5b54ab9ed1316"
+  integrity sha1-63AJLFf7A+IgHDaCrtW1SrntExY=
+
 parseqs@0.0.6:
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/parseqs/-/parseqs-0.0.6.tgz#8e4bb5a19d1cdc844a08ac974d34e273afa670d5"
