@@ -58,30 +58,31 @@ async function parse_entities(text) {
     //    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
     //}
 
-    await Promise.all(
-        Array.from(text.split('\n').entries(), ([idx, line]) => new Promise((resv, _rej) => {
-            let og_len = line.length;
-            line = line.replaceAll(ENTITY_PATTERN, match => ' '.repeat(match.length));
-
-            // check for existing entities
-            // TODO: sort and search by longest first
-            for (const ent of entity_list) {
-                for (let pos = line.indexOf(ent); pos >= 0; pos++) {
-                    register(ent, idx, pos, pos+ent.length);
-                    pos = line.indexOf(ent);
-                }
-                line = line.replace(ent, match => ' '.repeat(match.length));
-            }
-
-            // SpaCy NER TODO: not very useful
-            socket.emit('parse_NER', line, (resp) => {
-                const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
-                got.forEach(x => register(x[0], idx, x[2], x[3]));
-                resv();
-            });
-            // TODO: important terms detection
-        }))
-    );
+    // TODO: this await is bork
+    //await Promise.all(
+    //    Array.from(text.split('\n').entries(), ([idx, line]) => new Promise((resv, _rej) => {
+    //        let og_len = line.length;
+    //        line = line.replaceAll(ENTITY_PATTERN, match => ' '.repeat(match.length));
+    //
+    //        // check for existing entities
+    //        // TODO: sort and search by longest first
+    //        for (const ent of entity_list) {
+    //            for (let pos = line.indexOf(ent); pos >= 0; pos++) {
+    //                register(ent, idx, pos, pos+ent.length);
+    //                pos = line.indexOf(ent);
+    //            }
+    //            line = line.replace(ent, match => ' '.repeat(match.length));
+    //        }
+    //
+    //        // SpaCy NER TODO: not very useful
+    //        socket.emit('parse_NER', line, (resp) => {
+    //            const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
+    //            got.forEach(x => register(x[0], idx, x[2], x[3]));
+    //            resv();
+    //        });
+    //        // TODO: important terms detection
+    //    }))
+    //);
     return ret;
 }
 

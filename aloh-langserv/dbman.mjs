@@ -8,26 +8,28 @@ class Item {
         //this.workspace = workspace; // TODO: should entities know their workspace
         this.name = name;
         this.refs = refs;   // of the form 'file': [{ line, start, end }...]
+        this.type = null;
     }
     // methods
     async set_refs_by_file(file_id, refs) {
         if (refs.length === 0) {
             this.refs.delete(file_id);
             if (this.refs.size === 0) {
-                db_entities.delete(this.name);
+                delete databases[this.type][this.name];
             }
         } else {
             this.refs.set(file_id, refs);
         }
     }
     toString() {
-        return `<Item ${this.name}, ${JSON.stringify(Object.fromEntries(this.mentions), null, 4)}>`
+        return `<${this.type} ${this.name}, ${JSON.stringify(Object.fromEntries(this.mentions), null, 4)}>`
     }
 }
 class Ent extends Item {
     constructor(name, refs=new Map(), akas=new Set()) {
         super(name, refs);
         this.akas = akas;
+        this.type = 'ent';
     }
     getBlurb() {
         return '.aka ' + [...this.akas].join(', ');
@@ -37,20 +39,33 @@ class Ent extends Item {
     }
 }
 class Tag extends Item {
+    constructor(name, refs=new Map()) {
+        super(name, refs);
+        this.type = 'tag';
+    }
     getBlurb() {
         return `Referenced ${Array.from(this.refs.values(), v => v.length).reduce((a, b) => a + b, 0)} times.`
     }
 }
 class Rel extends Item {
+    constructor(name, refs=new Map()) {
+        super(name, refs);
+        this.type = 'rel';
+    }
     getBlurb() {
         return `Appears ${Array.from(this.refs.values(), v => v.length).reduce((a, b) => a + b, 0)} times.`
     }
 }
+const prototypes = {
+    'ent': Ent,
+    'tag': Tag,
+    'rel': Rel,
+}
 
 var databases = {
-    'ents': {},
-    'tags': {},
-    'rels': {},
+    'ent': {},
+    'tag': {},
+    'rel': {},
 }
 var prev_objs_by_file = {};
 
@@ -86,17 +101,18 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
         },
         setNoteObjects: async (file_id, objects) => {
             file_log(`transforming for db input...`)
-            const objs = { ents: objects[0], tags: objects[1], rels: objects[2] };
-            //for (const [type, things] of Object.entries(objs)) {
-            //    Object.entries(things).forEach(([name, refs]) => {
-            //        file_log(`    ${type}: ${name}`);
-            //        //if (!databases[type].hasOwnProperty(name))
-            //        //    databases[type][name] = new Ent(name);
-            //        //databases[type][name].set_refs_by_file(file_id, refs);
-            //    });
-            //}
+            const objs = { ent: objects[0], tag: objects[1], rel: objects[2] };
 
             // add new entities
+            for (const [type, things] of Object.entries(objs)) {
+                Object.entries(things).forEach(([name, refs]) => {
+                    file_log(`>   ${type}: ${name}`);
+                    if (!databases[type].hasOwnProperty(name))
+                        databases[type][name] = new prototypes[type](name);
+                    databases[type][name].set_refs_by_file(file_id, refs);
+                });
+            }
+
             //Object.entries(tags).forEach(([tag, refs]) => {
             //    if (!db_tags.has(tag)) db_tags.set(tag, new Tag(tag));
             //    db_tags.get(tag).set_refs_by_file(file_id, refs);
@@ -107,12 +123,14 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
             //})
 
             // remove existing entities
-            //if (prev_objs_by_file.hasOwnProperty(file_id)) {
-            //    for (const [db, names] of Object.entries(prev_objs_by_file[file_id])) 
-            //        for (const obj of names)
-            //            if (!objs[db].hasOwnProperty(obj))
-            //                databases[db][obj]?.refs.delete(file_id)
-            //}
+            if (prev_objs_by_file.hasOwnProperty(file_id)) {
+                for (const [types, names] of Object.entries(prev_objs_by_file[file_id])) 
+                    for (const name of names)
+                        databases[types][name].set_refs_by_file(file_id, []);
+            }
+            for (const [type, db] of Object.entries(objs)) {
+                objs[type] = Object.keys(db);
+            }
             prev_objs_by_file[file_id] = objs;
 
             //file_log(`tags: ${Array.from(db_tags.keys()).join(', ')}\nentities: ${Array.from(db_ents.keys()).join(', ')}\nrelations: ${Array.from(db_rels.keys()).join(', ')}\n`)

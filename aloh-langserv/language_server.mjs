@@ -85,31 +85,31 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
     const most_recent_text = change.document.getText();
     const file_id = basename((new URL(change.document.uri)).pathname);   // TODO: remove .aloh extension?
 
-    //if (Date.now() - prev_db_timestamp >= DB_INTERVAL) {
-    //    appendFile('/home/exr0n/snap/dbman.log', 'got text' + Date.now() + '\n')
-    //    prev_db_timestamp = Date.now();
-    //    objman.parseObjects(most_recent_text)
-    //        .then(objs => {
-    //            appendFile('/home/exr0n/snap/dbman.log', 'parsed objects' + Date.now() + '\n')
-    //            //for (let group in objs) for (let obj in group) {
-    //            //    Object.assign(group[obj], { file_id: file_id })
-    //            //}
-    //            dbman.setNoteObjects(file_id, objs)
-    //                .then(() => { appendFile('/home/exr0n/snap/dbman.log', 'saved to database' + Date.now() + '\n') });
-    //        });
-    //    //connection.sendDiagnostics({
-    //    //    uri: change.document.uri,
-    //    //    diagnostics: [{
-    //    //        severity: DiagnosticSeverity.Hint,
-    //    //        range: {
-    //    //            start: { line: 0, position: 0 },
-    //    //            end: { line: 0, position: 1 },
-    //    //        },
-    //    //        message: `Aloh is active here in '${file_id}'!`,
-    //    //        source: 'hint',
-    //    //    }]
-    //    //})
-    //}
+    if (Date.now() - prev_db_timestamp >= DB_INTERVAL) {
+        //appendFile('/home/exr0n/snap/dbman.log', 'got text' + Date.now() + '\n')
+        prev_db_timestamp = Date.now();
+        objman.parseObjects(most_recent_text)
+            .then(objs => {
+                appendFile('/home/exr0n/snap/dbman.log', '\n\n\nparsed objects' + Date.now() + '\n')
+                //for (let group in objs) for (let obj in group) {
+                //    Object.assign(group[obj], { file_id: file_id })
+                //}
+                dbman.setNoteObjects(file_id, objs)
+                    .then(() => { appendFile('/home/exr0n/snap/dbman.log', 'saved to database' + Date.now() + '\n') });
+            });
+        //connection.sendDiagnostics({
+        //    uri: change.document.uri,
+        //    diagnostics: [{
+        //        severity: DiagnosticSeverity.Hint,
+        //        range: {
+        //            start: { line: 0, position: 0 },
+        //            end: { line: 0, position: 1 },
+        //        },
+        //        message: `Aloh is active here in '${file_id}'!`,
+        //        source: 'hint',
+        //    }]
+        //})
+    }
 });
 
 connection.onDidChangeWatchedFiles(async change => {
@@ -130,7 +130,7 @@ connection.onCompletion(async textdocument_position => {
         .map(item => ({
             label: item,
             kind: CompletionItemKind.Text,
-            data: { type: 'ents' },
+            data: { type: 'ent' },
         })
     );   // TODO: whittle down the list a bit using textdocument_position
     //return (await dbman.getEntityList())
