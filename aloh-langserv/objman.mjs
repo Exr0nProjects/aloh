@@ -53,7 +53,7 @@ async function parse_entities(text) {
     //        ret[ent] = { source: src, lines: [] };
     //    ret[ent].lines.push(idx);
     //}
-    let entity_list = await dbman.getEntityList();  // TODO: could optimize this by maintaining a trie
+    let entity_list = await dbman.getEntityNames();  // TODO: could optimize this by maintaining a trie
 
     //function escapeRegExp(string) {     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions#escaping
     //    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string

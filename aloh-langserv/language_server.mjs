@@ -61,8 +61,6 @@ const getDiagnostics = (textDocument) =>
         .map(blacklistToDiagnostic(textDocument))
 
 
-
-
 export const connection = createConnection();
 const documents = new TextDocuments(TextDocument)
 
@@ -89,6 +87,7 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
         prev_db_timestamp = Date.now();
         objman.parseObjects(most_recent_text)
             .then(objs => { dbman.setNoteObjects(file_id, objs) });
+
         //connection.sendDiagnostics({
         //    uri: change.document.uri,
         //    diagnostics: [{
@@ -118,20 +117,23 @@ connection.onCompletion(async textdocument_position => {
     //    data: 'ent',
     //}))
 
-    return (await dbman.getEntityList())
-        .map(item => ({
-            label: item,
-            kind: CompletionItemKind.Text,
-            data: { type: 'ent' },
-        })
-    );   // TODO: whittle down the list a bit using textdocument_position
-    //return (await dbman.getEntityList())
+    //return (await dbman.getCompletionList())
     //    .map(item => ({
-    //        label: item.name,
+    //        label: item,
     //        kind: CompletionItemKind.Text,
-    //        data: { type: item.type },
+    //        data: { type: 'ent' },
     //    })
     //);   // TODO: whittle down the list a bit using textdocument_position
+
+    appendFile('/home/exr0n/snap/dbman.log', `completion triggered ` + Date.now() + '\n')
+
+    return (await dbman.getCompletionList())
+        .map(item => ({
+            label: item.name,
+            kind: CompletionItemKind.Text,
+            data: { type: item.type },
+        })
+    );   // TODO: whittle down the list a bit using textdocument_position
 });
 
 connection.onCompletionResolve(async (item) => {

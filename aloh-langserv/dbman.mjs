@@ -81,15 +81,21 @@ function file_log(text) {
 export default async function(/* NOTE: should this take workspace as an arg */) {
     load_entities();
     return {
-        getEntityList: async () => {
+        getEntityNames: async () => {
+            return Object.keys(databases['ent']);
+        },
+        getCompletionList: async () => {
             // TODO: add some metadata, eg. time or usage
             //appendFile('/home/exr0n/snap/dbman.log', 'getting entity list...' + Date.now() + '\n')
-            let ret = ['amazing', 'cool', 'stuff'];
+            let ret = [];
+            for (let db of Object.values(databases)) {
             //for (let [type, db] of Object.entries(databases)) {
-            //    //ret += Array.from(Object.keys(db)).map(x => ({ name: x, type: type }))
-            //    ret = ret.concat(Array.from(Object.keys(db)))
-            //}
-            //appendFile('/home/exr0n/snap/dbman.log', `entity list complete ${ret.length} total entities` + Date.now() + '\n')
+                ret = ret.concat(Array.from(Object.values(db))
+                    .map(x => ({ name: x.name, type: x.type }))
+                )
+                //ret = ret.concat(Array.from(Object.keys(db)))
+            }
+            appendFile('/home/exr0n/snap/dbman.log', `entity list complete ${JSON.stringify(ret)} total entities` + Date.now() + '\n')
             return ret;
         },
         getItemBlurb: async (type, name) => {
@@ -130,8 +136,10 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
             //appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(entities) + '\n');
             //appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(tags) + '\n\n');
             //appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(relations) + '\n\n');
-            for (const [type, db] of Object.entries(databases))
-                file_log(`${type}: ${Array.from(Object.keys(db)).join(', ')}`)
+
+            //file_log('\n\n\n\nUPDATE DATABASE\n')
+            //for (const [type, db] of Object.entries(databases))
+            //    file_log(`${type}: ${Array.from(Object.keys(db)).join(', ')}`)
         }
     };
 }
