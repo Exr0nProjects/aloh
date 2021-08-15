@@ -14,10 +14,11 @@ const DENYLIST_NER_TYPES = [ 'ORDINAL', 'CARDINAL', 'LAW', 'QUANTITY' ]
 import io from 'socket.io-client';
 
 import { spawn } from 'child_process';
-import { appendFile } from 'fs/promises';
 import { dirname } from 'path';
 
 import dbman_init from './dbman.mjs';   // TODO: race conditions galore from accessing the DB from multiple places
+import { hasOwn, file_log } from './util.mjs'
+
 var dbman = null;
 
 // set up socket stuff
@@ -42,14 +43,14 @@ async function parse_entities(text) {
     )
 
     const register = (val, line, start, end) => {
-        if (!ret.hasOwnProperty(val)) 
+        if (!hasOwn(ret.val)) 
             ret[val] = { refs: [] }
         ret[val].refs.push([{ line: line, start: start, end: end }])
     }
 
     //const register = (src, ent, idx) => {
     //    // TODO: use parse_with_regex
-    //    if (!ret.hasOwnProperty(ent))
+    //    if (!hasOwn(ret, ent))
     //        ret[ent] = { source: src, lines: [] };
     //    ret[ent].lines.push(idx);
     //}
@@ -90,7 +91,7 @@ async function parse_entities(text) {
 async function parse_with_regex(text, pattern, ignore_beg, ignore_end) {
     let ret = {};
     const register = (val, line, start, end) => {
-        if (!ret.hasOwnProperty(val)) 
+        if (!hasOwn(ret, val)) 
             ret[val] = { refs: [] }
         ret[val].refs.push([{ line: line, start: start, end: end }])
     }

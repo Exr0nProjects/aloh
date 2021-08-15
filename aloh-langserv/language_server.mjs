@@ -18,7 +18,6 @@ const {
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-//import { fileURLToPath } from 'url';
 import { basename } from 'path'
 import { appendFile } from 'fs/promises';
 
@@ -110,23 +109,6 @@ connection.onDidChangeWatchedFiles(async change => {
 });
 
 connection.onCompletion(async textdocument_position => {
-    //connection.console.log(textdocument_position);
-    //return ['Huxley Marvit', 'Jacob Cole'].map(item => ({
-    //    label: item,
-    //    kind: CompletionItemKind.Text,
-    //    data: 'ent',
-    //}))
-
-    //return (await dbman.getCompletionList())
-    //    .map(item => ({
-    //        label: item,
-    //        kind: CompletionItemKind.Text,
-    //        data: { type: 'ent' },
-    //    })
-    //);   // TODO: whittle down the list a bit using textdocument_position
-
-    appendFile('/home/exr0n/snap/dbman.log', `completion triggered ` + Date.now() + '\n')
-
     return (await dbman.getCompletionList())
         .map(item => ({
             label: item.name,
@@ -137,10 +119,10 @@ connection.onCompletion(async textdocument_position => {
 });
 
 connection.onCompletionResolve(async (item) => {
-    //item.detail = await dbman.getItemBlurb(item.data.type, item.name)
-    //    .catch(err => err.toString());
-    //item.documentation = await dbman.getItemDescription(item.data.type, item.data)
-    //    .catch(err => err.toString());
+    item.detail = await dbman.getItemBlurb(item.data.type, item.label)
+        .catch(err => err.toString());
+    item.documentation = await dbman.getItemDescription(item.data.type, item.label)
+        .catch(err => err.toString());
     return item;
 });
 

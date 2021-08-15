@@ -2,6 +2,7 @@
 'use strict';
 
 import { appendFile } from 'fs/promises';
+import { hasOwn, file_log } from './util.mjs'
 
 class Item {
     constructor(name, refs=new Map()) {
@@ -18,9 +19,11 @@ class Item {
                 delete databases[this.type][this.name];
             }
         } else {
-            //file_log(`in ${file_id.padEnd(20, ' ')}setting refs for ${this.name} to ${refs}`)
             this.refs.set(file_id, refs);
         }
+    }
+    getBlurb() {
+        return `Appears ${Array.from(this.refs.values(), v => v.refs.length).reduce((a, b) => a + b, 0)} times.`
     }
     toString() {
         return `<${this.type} ${this.name}, ${JSON.stringify(Object.fromEntries(this.mentions), null, 4)}>`
@@ -33,7 +36,8 @@ class Ent extends Item {
         this.type = 'ent';
     }
     getBlurb() {
-        return '.aka ' + [...this.akas].join(', ');
+        return '.aka ' + (this.akas.length > 0 ? [...this.akas].join(', ') : '[none]') 
+               + '\n' + super.getBlurb();
     }
     toString() {
         return `<Entity ${this.name}, ${JSON.stringify(Object.fromEntries(this.mentions), null, 4)}>`
@@ -44,17 +48,11 @@ class Tag extends Item {
         super(name, refs);
         this.type = 'tag';
     }
-    getBlurb() {
-        return `Referenced ${Array.from(this.refs.values(), v => v.length).reduce((a, b) => a + b, 0)} times.`
-    }
 }
 class Rel extends Item {
     constructor(name, refs=new Map()) {
         super(name, refs);
         this.type = 'rel';
-    }
-    getBlurb() {
-        return `Appears ${Array.from(this.refs.values(), v => v.length).reduce((a, b) => a + b, 0)} times.`
     }
 }
 const prototypes = {
@@ -74,10 +72,6 @@ function load_entities() {
     // TODO
 }
 
-function file_log(text) {
-    appendFile('/home/exr0n/snap/dbman.log', text + '\n');
-}
-
 export default async function(/* NOTE: should this take workspace as an arg */) {
     load_entities();
     return {
@@ -85,46 +79,40 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
             return Object.keys(databases['ent']);
         },
         getCompletionList: async () => {
-            // TODO: add some metadata, eg. time or usage
-            //appendFile('/home/exr0n/snap/dbman.log', 'getting entity list...' + Date.now() + '\n')
             let ret = [];
             for (let db of Object.values(databases)) {
-            //for (let [type, db] of Object.entries(databases)) {
+                // TODO: add some metadata, eg. time or usage
                 ret = ret.concat(Array.from(Object.values(db))
                     .map(x => ({ name: x.name, type: x.type }))
-                )
-                //ret = ret.concat(Array.from(Object.keys(db)))
+                );
             }
-            appendFile('/home/exr0n/snap/dbman.log', `entity list complete ${JSON.stringify(ret)} total entities` + Date.now() + '\n')
             return ret;
         },
         getItemBlurb: async (type, name) => {
-            if (databases[type].has(name)) return databases[type].get(name).getBlurb();
-            else throw Error(`<${type}> ${entity_name} not found!`);
+            if (hasOwn(databases[type], (name))) return databases[type][name].getBlurb();
+            else throw Error(`<${type}> ${name} not found!`);
         },
         getItemDescription: async (type, name) => {
-            if (databases[type].has(name)) return `- .likes/Coco\n- .likes/cado\n`; // TODO: make the reference-generation code
-            else throw Error(`<${type}> ${entity_name} not found!`);
+            if (hasOwn(databases[type], name)) return `- .likes/Coco\n- .likes/cado\n`; // TODO: make the reference-generation code
+            else throw Error(`<${type}> ${name} not found!`);
         },
         setNoteObjects: async (file_id, objects) => {
-            //file_log(`transforming for db input...`)
             const objs = { ent: objects[0], tag: objects[1], rel: objects[2] };
 
             // add new entities
             for (const [type, things] of Object.entries(objs)) {
                 Object.entries(things).forEach(([name, refs]) => {
-                    //file_log(`>   ${type}: ${name.padEnd(20, ' ')} ${JSON.stringify(refs)}`);
-                    if (!databases[type].hasOwnProperty(name))
+                    if (!hasOwn(databases[type], name))
                         databases[type][name] = new prototypes[type](name);
                     databases[type][name].set_refs_by_file(file_id, refs);
                 });
             }
 
             // remove existing entities
-            if (prev_objs_by_file.hasOwnProperty(file_id)) {
+            if (hasOwn(prev_objs_by_file, file_id)) {
                 for (const [type, names] of Object.entries(prev_objs_by_file[file_id])) 
                     for (const name of names)
-                        if (!objs[type].hasOwnProperty(name))
+                        if (!hasOwn(objs[type], name))
                             databases[type][name].set_refs_by_file(file_id, []);
             }
             for (const [type, db] of Object.entries(objs)) {
@@ -132,11 +120,7 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
             }
             prev_objs_by_file[file_id] = objs;
 
-            //file_log(`tags: ${Array.from(db_tags.keys()).join(', ')}\nentities: ${Array.from(db_ents.keys()).join(', ')}\nrelations: ${Array.from(db_rels.keys()).join(', ')}\n`)
-            //appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(entities) + '\n');
-            //appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(tags) + '\n\n');
-            //appendFile('/home/exr0n/snap/dbman.log', JSON.stringify(relations) + '\n\n');
-
+            // show the database
             //file_log('\n\n\n\nUPDATE DATABASE\n')
             //for (const [type, db] of Object.entries(databases))
             //    file_log(`${type}: ${Array.from(Object.keys(db)).join(', ')}`)
