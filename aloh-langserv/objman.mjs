@@ -3,6 +3,7 @@
 const SOCKET_PORT = 62326;
 //const SPACY_MODEL = 'en_core_web_trf';
 const SPACY_MODEL = 'en_core_web_lg';
+// TODO: replace the leading (\s|^) with https://www.regular-expressions.info/lookaround.html to allow [match] [match]
 const RELATION_PATTERN  = /(\s|^)\.[\w\-]+\w\b/g        // period then \w + '-'
 const ENTITY_PATTERN    = /(\s|^)\[[^\[\]]+\](\W|$)/g   // bracketed strings
 const TAG_PATTERN       = /(\s|^):[\w\-\/]+\w\b/g       // colon then \w + '-'

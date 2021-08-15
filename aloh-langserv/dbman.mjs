@@ -18,6 +18,7 @@ class Item {
                 delete databases[this.type][this.name];
             }
         } else {
+            //file_log(`in ${file_id.padEnd(20, ' ')}setting refs for ${this.name} to ${refs}`)
             this.refs.set(file_id, refs);
         }
     }
@@ -100,33 +101,25 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
             else throw Error(`<${type}> ${entity_name} not found!`);
         },
         setNoteObjects: async (file_id, objects) => {
-            file_log(`transforming for db input...`)
+            //file_log(`transforming for db input...`)
             const objs = { ent: objects[0], tag: objects[1], rel: objects[2] };
 
             // add new entities
             for (const [type, things] of Object.entries(objs)) {
                 Object.entries(things).forEach(([name, refs]) => {
-                    file_log(`>   ${type}: ${name}`);
+                    //file_log(`>   ${type}: ${name.padEnd(20, ' ')} ${JSON.stringify(refs)}`);
                     if (!databases[type].hasOwnProperty(name))
                         databases[type][name] = new prototypes[type](name);
                     databases[type][name].set_refs_by_file(file_id, refs);
                 });
             }
 
-            //Object.entries(tags).forEach(([tag, refs]) => {
-            //    if (!db_tags.has(tag)) db_tags.set(tag, new Tag(tag));
-            //    db_tags.get(tag).set_refs_by_file(file_id, refs);
-            //})
-            //Object.entries(relations).forEach(([rel, refs]) => {
-            //    if (!db_rels.has(rel)) db_rels.set(rel, new Rel(rel));
-            //    db_rels.get(rel).set_refs_by_file(file_id, refs);
-            //})
-
             // remove existing entities
             if (prev_objs_by_file.hasOwnProperty(file_id)) {
-                for (const [types, names] of Object.entries(prev_objs_by_file[file_id])) 
+                for (const [type, names] of Object.entries(prev_objs_by_file[file_id])) 
                     for (const name of names)
-                        databases[types][name].set_refs_by_file(file_id, []);
+                        if (!objs[type].hasOwnProperty(name))
+                            databases[type][name].set_refs_by_file(file_id, []);
             }
             for (const [type, db] of Object.entries(objs)) {
                 objs[type] = Object.keys(db);

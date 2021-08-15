@@ -85,18 +85,10 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
     const most_recent_text = change.document.getText();
     const file_id = basename((new URL(change.document.uri)).pathname);   // TODO: remove .aloh extension?
 
-    if (Date.now() - prev_db_timestamp >= DB_INTERVAL) {
-        //appendFile('/home/exr0n/snap/dbman.log', 'got text' + Date.now() + '\n')
+    if (Date.now() - prev_db_timestamp >= DB_INTERVAL) setTimeout(() => {
         prev_db_timestamp = Date.now();
         objman.parseObjects(most_recent_text)
-            .then(objs => {
-                appendFile('/home/exr0n/snap/dbman.log', '\n\n\nparsed objects' + Date.now() + '\n')
-                //for (let group in objs) for (let obj in group) {
-                //    Object.assign(group[obj], { file_id: file_id })
-                //}
-                dbman.setNoteObjects(file_id, objs)
-                    .then(() => { appendFile('/home/exr0n/snap/dbman.log', 'saved to database' + Date.now() + '\n') });
-            });
+            .then(objs => { dbman.setNoteObjects(file_id, objs) });
         //connection.sendDiagnostics({
         //    uri: change.document.uri,
         //    diagnostics: [{
@@ -109,7 +101,7 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
         //        source: 'hint',
         //    }]
         //})
-    }
+    }, DB_INTERVAL);
 });
 
 connection.onDidChangeWatchedFiles(async change => {
