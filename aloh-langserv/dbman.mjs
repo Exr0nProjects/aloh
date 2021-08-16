@@ -95,9 +95,7 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
             if (hasOwn(databases[type], name)) return `- .likes/Coco\n- .likes/cado\n`; // TODO: make the reference-generation code
             else throw Error(`<${type}> ${name} not found!`);
         },
-        setNoteObjects: async (file_id, objects) => {
-            const objs = { ent: objects[0], tag: objects[1], rel: objects[2] };
-
+        setNoteObjects: async (file_id, objs) => {
             // add new entities
             for (const [type, things] of Object.entries(objs)) {
                 Object.entries(things).forEach(([name, refs]) => {
@@ -114,10 +112,11 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
                         if (!hasOwn(objs[type], name))
                             databases[type][name].set_refs_by_file(file_id, []);
             }
+            let keys = {}
             for (const [type, db] of Object.entries(objs)) {
-                objs[type] = Object.keys(db);
+                keys[type] = Object.keys(db);
             }
-            prev_objs_by_file[file_id] = objs;
+            prev_objs_by_file[file_id] = keys;
 
             // show the database
             //file_log('\n\nUPDATE DATABASE\n')

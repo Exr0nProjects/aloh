@@ -54,6 +54,10 @@ DEPRECATED:
 - how to find entities
     - strip whitespace -> keyword matching
     - anything thats capitalized
+    - one-word capitalized strings that match entities found so far in a document (TODO)
+        - longform must be >= 2 words
+        - shortform must cover every capitalized letter
+        - Quality of Life -> QoL, Vision Transformer -> ViT
     - anything in brackets
     - named entity recognition
     - TF-IDF? how to chunk into terms?

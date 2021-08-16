@@ -71,7 +71,7 @@ async function parse_entities(text) {
         query_promises.push(new Promise((resv, rej) => {
             socket.emit('parse_NER', line, (resp) => {
                 const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
-                got.forEach(x => register(x[0], idx, x[2], x[3]));
+                got.forEach(x => register(x[0], idx + 1, x[2], x[3]));
                 resv();
             });
         }));
@@ -95,7 +95,6 @@ async function parse_with_regex(text, pattern, ignore_beg, ignore_end) {
                 match.index + b, match.index + match[0].length - e);
         }
     }
-    file_log(`entities inside parse ${Object.keys(ret)}`)
     return ret;
 }
 
@@ -116,7 +115,13 @@ async function parse_relations(text) {
 
 const api = {
     parseObjects: async (text) => {
-        return Promise.all([ parse_entities(text), parse_tags(text), parse_relations(text) ]);
+        let ret = {
+            'ent': parse_entities(text),
+            'tag': parse_tags(text),
+            'rel': parse_relations(text)
+        }
+        for (const k in ret) ret[k] = await ret[k];
+        return ret;
     }
 }
 export default (async () => {

@@ -60,6 +60,39 @@ const getDiagnostics = (textDocument) =>
     getBlacklisted(textDocument.getText())
         .map(blacklistToDiagnostic(textDocument))
 
+async function syntax_highlight(document, file_id, objs) {
+    // TODO: replace with actual semantics
+    const diagnostics = [{
+        severity: DiagnosticSeverity.Hint,
+        range: {
+            start: { line: 0, position: 0 },
+            end: { line: 0, position: 1 },
+        },
+        message: `Aloh is active here in '${file_id}'!`,
+        source: 'hint',
+    }];
+
+    file_log(`objs: ${JSON.stringify(objs)}`)
+    for (const [type, list] of Object.entries(objs)) {
+        for (const [name, { refs }] of Object.entries(list)) {
+            for (const { line, start, end } of refs) {
+                diagnostics.push({
+                    severity: DiagnosticSeverity.Error,
+                    range: {
+                        start: { line: line, position: 10 },
+                        end: { line: line, position: 20 },
+                    },
+                    message: `${type} ${name}`,
+                    source: `display ${type}`,
+                })
+            }
+        }
+    }
+    connection.sendDiagnostics({
+        uri: document.uri,
+        diagnostics: diagnostics
+    });
+}
 
 export const connection = createConnection();
 const documents = new TextDocuments(TextDocument)
@@ -87,21 +120,11 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
         prev_db_timestamp = Date.now();
         objman.parseObjects(most_recent_text)
             .then(objs => {
-                dbman.setNoteObjects(file_id, objs)
+                dbman.setNoteObjects(file_id, objs);
+                syntax_highlight(change.document, file_id, objs);
             });
 
-        //connection.sendDiagnostics({
-        //    uri: change.document.uri,
-        //    diagnostics: [{
-        //        severity: DiagnosticSeverity.Hint,
-        //        range: {
-        //            start: { line: 0, position: 0 },
-        //            end: { line: 0, position: 1 },
-        //        },
-        //        message: `Aloh is active here in '${file_id}'!`,
-        //        source: 'hint',
-        //    }]
-        //})
+
     }, DB_INTERVAL);
 });
 
