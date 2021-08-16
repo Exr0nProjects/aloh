@@ -98,8 +98,6 @@ export default async function(/* NOTE: should this take workspace as an arg */) 
         setNoteObjects: async (file_id, objects) => {
             const objs = { ent: objects[0], tag: objects[1], rel: objects[2] };
 
-            file_log(`got entities ${JSON.stringify(objects[0], null, 2)}`)
-
             // add new entities
             for (const [type, things] of Object.entries(objs)) {
                 Object.entries(things).forEach(([name, refs]) => {

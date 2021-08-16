@@ -36,11 +36,13 @@ function launchSpacyServer() {  // TODO: whats a clean solution for this?
 }
 
 async function parse_entities(text) {
-    // check for square brackets
+     //check for square brackets
     let ret = parse_with_regex(text, ENTITY_PATTERN,
         x => x[0] === '[' ? 1 : 2,
         x => x[x.length-1] == ']' ? 1 : 2
     )
+    let entity_list = dbman.getEntityNames();
+
     text = text.replaceAll(ENTITY_PATTERN,      match => ' '.repeat(match.length));
     text = text.replaceAll(TAG_PATTERN,         match => ' '.repeat(match.length));
     text = text.replaceAll(RELATION_PATTERN,    match => ' '.repeat(match.length));
@@ -48,40 +50,35 @@ async function parse_entities(text) {
     const register = (val, line, start, end) => {
         if (!hasOwn(ret, val)) ret[val] = { refs: [] }
         ret[val].refs.push({ line: line, start: start, end: end })
-        file_log(`${val} now has ${ret[val].refs.length} references in this file`)
     }
 
-    const entity_list = await dbman.getEntityNames();
+    entity_list = await entity_list;
+    ret = await ret;
+
+    let query_promises = [];
 
     for (let [idx, line] of Array.from(text.split('\n').entries())) {
         // check for existing entities
         // TODO: sort and search by longest first
         // TODO: could optimize this by maintaining a trie
-        file_log(`eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`)
         for (const ent of entity_list) {
-            file_log(`testing '${line}' for ${ent} ${line.indexOf(ent)}`)
             for (let pos = line.indexOf(ent); pos >= 0; pos = line.indexOf(ent, pos+1)) {
-        //        file_log(`at line ${idx} pos ${ent}`)
                 register(ent, idx, pos, pos+ent.length);
             }
-        //    line = line.replace(ent, match => ' '.repeat(match.length));
+            line = line.replace(ent, match => ' '.repeat(match.length));
         }
+        // SpaCy NER TODO: not very useful
+        query_promises.push(new Promise((resv, rej) => {
+            socket.emit('parse_NER', line, (resp) => {
+                const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
+                got.forEach(x => register(x[0], idx, x[2], x[3]));
+                resv();
+            });
+        }));
+        // TODO: important terms detection
     }
+    await Promise.all(query_promises);
 
-    file_log(`returning entities ${JSON.stringify(ret, null, 2)}`)
-
-    //// TODO: this await is bork
-    //await Promise.all(
-    //    Array.from(text.split('\n').entries(), ([idx, line]) => new Promise((resv, _rej) => {
-    //        //// SpaCy NER TODO: not very useful
-    //        //socket.emit('parse_NER', line, (resp) => {
-    //        //    const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
-    //        //    got.forEach(x => register(x[0], idx, x[2], x[3]));
-    //        //    resv();
-    //        //});
-    //        // TODO: important terms detection
-    //    }))
-    //);
     return ret;
 }
 
@@ -98,6 +95,7 @@ async function parse_with_regex(text, pattern, ignore_beg, ignore_end) {
                 match.index + b, match.index + match[0].length - e);
         }
     }
+    file_log(`entities inside parse ${Object.keys(ret)}`)
     return ret;
 }
 

@@ -87,8 +87,6 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
         prev_db_timestamp = Date.now();
         objman.parseObjects(most_recent_text)
             .then(objs => {
- 
-                file_log(`got entities ${JSON.stringify(objs[0], null, 2)}`)
                 dbman.setNoteObjects(file_id, objs)
             });
 
