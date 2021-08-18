@@ -4,7 +4,7 @@ mod parse;
 use parse::parse_note;
 
 mod prototypes;
-use prototypes::{ Item, Entity, Tag, Relation, RelationInstance };
+use prototypes::{ Item, RelationInstance };
 
 mod objects;
 use objects::suggest;
