@@ -1,0 +1,16 @@
+{
+  "name": "aloh-engine",
+  "version": "0.0.0",
+  "description": "Capture friction't",
+  "main": "index.node",
+  "scripts": {
+    "build": "cargo-cp-artifact -nc index.node -- cargo build --message-format=json-render-diagnostics",
+    "install": "npm run build",
+    "test": "cargo test"
+  },
+  "author": "Exr0n <mail@exr0n.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "cargo-cp-artifact": "^0.1"
+  }
+}
