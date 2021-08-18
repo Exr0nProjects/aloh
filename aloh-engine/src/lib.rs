@@ -1,5 +1,14 @@
 use neon::prelude::*;
 
+mod parse;
+use parse::parse_note;
+
+mod prototypes;
+use prototypes::{ Item, Entity, Tag, Relation, RelationInstance };
+
+mod objects;
+use objects::suggest;
+
 fn hello(mut cx: FunctionContext) -> JsResult<JsString> {
     Ok(cx.string("hello node"))
 }
