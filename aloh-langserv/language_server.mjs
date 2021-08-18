@@ -30,35 +30,7 @@ var objman = null;
 
 const DB_INTERVAL = 1000;
 var prev_db_timestamp = 0;
-
-const getBlacklisted = (text) => {
-    const blacklist = [
-        'foo',
-        'bar',
-        'baz',
-    ]
-    const regex = new RegExp(`\\b(${blacklist.join('|')})\\b`, 'gi')
-    const results = []
-    while ((matches = regex.exec(text)) && results.length < 100) {
-        results.push({
-            value: matches[0],
-            index: matches.index,
-        })
-    }
-    return results
-}
-const blacklistToDiagnostic = (textDocument) => ({ index, value }) => ({
-    severity: DiagnosticSeverity.Warning,
-    range: {
-        start: textDocument.positionAt(index),
-        end: textDocument.positionAt(index + value.length),
-    },
-    message: `${value} is blacklisted.`,
-    source: 'Blacklister',
-})
-const getDiagnostics = (textDocument) =>
-    getBlacklisted(textDocument.getText())
-        .map(blacklistToDiagnostic(textDocument))
+var active_db_timeout = null;
 
 async function syntax_highlight(document, file_id, objs) {
     // TODO: replace with actual semantics
@@ -72,15 +44,14 @@ async function syntax_highlight(document, file_id, objs) {
         source: 'hint',
     }];
 
-    file_log(`objs: ${JSON.stringify(objs)}`)
     for (const [type, list] of Object.entries(objs)) {
         for (const [name, { refs }] of Object.entries(list)) {
             for (const { line, start, end } of refs) {
                 diagnostics.push({
-                    severity: DiagnosticSeverity.Error,
+                    severity: DiagnosticSeverity.Information,
                     range: {
-                        start: { line: line, position: 10 },
-                        end: { line: line, position: 20 },
+                        start: { line: line, position: start },
+                        end: { line: line, position: end },
                     },
                     message: `${type} ${name}`,
                     source: `display ${type}`,
@@ -116,16 +87,17 @@ documents.onDidChangeContent(async change => {      // TODO: lots of race condit
     const most_recent_text = change.document.getText();
     const file_id = basename((new URL(change.document.uri)).pathname);   // TODO: remove .aloh extension?
 
-    if (Date.now() - prev_db_timestamp >= DB_INTERVAL) setTimeout(() => {
-        prev_db_timestamp = Date.now();
-        objman.parseObjects(most_recent_text)
-            .then(objs => {
-                dbman.setNoteObjects(file_id, objs);
-                syntax_highlight(change.document, file_id, objs);
-            });
-
-
-    }, DB_INTERVAL);
+    if (Date.now() - prev_db_timestamp >= DB_INTERVAL) {
+        clearTimeout(active_db_timeout);
+        active_db_timeout = setTimeout(() => {
+            prev_db_timestamp = Date.now();
+            objman.parseObjects(most_recent_text)
+                .then(objs => {
+                    dbman.setNoteObjects(file_id, objs);
+                    syntax_highlight(change.document, file_id, objs);
+                });
+        }, DB_INTERVAL);
+    }
 });
 
 connection.onDidChangeWatchedFiles(async change => {

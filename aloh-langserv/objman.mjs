@@ -43,9 +43,11 @@ async function parse_entities(text) {
     )
     let entity_list = dbman.getEntityNames();
 
-    text = text.replaceAll(ENTITY_PATTERN,      match => ' '.repeat(match.length));
-    text = text.replaceAll(TAG_PATTERN,         match => ' '.repeat(match.length));
-    text = text.replaceAll(RELATION_PATTERN,    match => ' '.repeat(match.length));
+    const letters_replacer = str => Array.from(str, c => c === '\n' ? '\n' : ' ').join('');
+
+    text = text.replaceAll(ENTITY_PATTERN,      letters_replacer);
+    text = text.replaceAll(TAG_PATTERN,         letters_replacer);
+    text = text.replaceAll(RELATION_PATTERN,    letters_replacer);
 
     const register = (val, line, start, end) => {
         if (!hasOwn(ret, val)) ret[val] = { refs: [] }
@@ -53,6 +55,7 @@ async function parse_entities(text) {
     }
 
     entity_list = await entity_list;
+    entity_list.sort((a, b) => b.length - a.length)
     ret = await ret;
 
     let query_promises = [];
@@ -67,14 +70,14 @@ async function parse_entities(text) {
             }
             line = line.replace(ent, match => ' '.repeat(match.length));
         }
-        // SpaCy NER TODO: not very useful
-        query_promises.push(new Promise((resv, rej) => {
-            socket.emit('parse_NER', line, (resp) => {
-                const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
-                got.forEach(x => register(x[0], idx + 1, x[2], x[3]));
-                resv();
-            });
-        }));
+        // SpaCy NER TODO: slow and not very useful
+        //query_promises.push(new Promise((resv, rej) => {
+        //    socket.emit('parse_NER', line, (resp) => {
+        //        const got = resp.filter(x => !DENYLIST_NER_TYPES.includes(x[1]));
+        //        got.forEach(x => register(x[0], idx, x[2], x[3]));
+        //        resv();
+        //    });
+        //}));
         // TODO: important terms detection
     }
     await Promise.all(query_promises);
