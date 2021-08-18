@@ -10,6 +10,11 @@ exclude = ["index.node"]
 [lib]
 crate-type = ["cdylib"]
 
+[dependencies]
+chrono = "0.4"
+indexmap = "1.7"        # faster iteration which is good for suggestions
+derive_more = "0.99"    # auto-derive from String for singleton tuple structs
+
 [dependencies.neon]
 version = "0.9"
 default-features = false
