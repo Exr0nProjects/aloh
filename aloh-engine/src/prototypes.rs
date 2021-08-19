@@ -47,6 +47,20 @@ impl PartialEq for RelationInstance {
     }
 }
 
+
+pub trait Item {
+    fn get_name(&self) -> String;
+    fn get_type(&self) -> String;
+    fn get_blurb(&self) -> String {
+        // TODO
+        return "is amazang".to_owned();
+    }
+    fn gen_summary(&self) -> String {
+        // TODO
+        return "- likes Coco\n- likes cado".to_owned();
+    }
+}
+
 #[derive(Clone, Eq, Debug)]
 pub struct Entity {
     name: EntityID,
@@ -63,9 +77,10 @@ impl Entity {
             outgoing: IndexMap::new()
         }
     }
-    pub fn new_item(name: String) -> Item {
-        return Item::new(ItemID::Entity{0: EntityID(name)})
-    }
+}
+impl Item for Entity {
+    fn get_name(&self) -> String { self.name.clone().into() }
+    fn get_type(&self) -> String { "ent".to_owned() }
 }
 impl PartialEq for Entity {
     fn eq(&self, other: &Self) -> bool { self.name == other.name }
@@ -79,9 +94,10 @@ impl Tag {
     pub fn new(name: TagID) -> Tag {
         Tag { name, locs: IndexMap::new() }
     }
-    pub fn new_item(name: String) -> Item {
-        return Item::new(ItemID::Tag{0: TagID(name)})
-    }
+}
+impl Item for Tag {
+    fn get_name(&self) -> String { self.name.clone().into() }
+    fn get_type(&self) -> String { "tag".to_owned() }
 }
 impl PartialEq for Tag {
     fn eq(&self, other: &Self) -> bool { self.name == other.name }
@@ -95,32 +111,11 @@ impl Relation {
     pub fn new(name: RelationID) -> Relation {
         Relation { name, locs: IndexMap::new() }
     }
-    pub fn new_item(name: String) -> Item {
-        return Item::new(ItemID::Relation{0: RelationID(name)})
-    }
+}
+impl Item for Relation {
+    fn get_name(&self) -> String { self.name.clone().into() }
+    fn get_type(&self) -> String { "rel".to_owned() }
 }
 impl PartialEq for Relation {
     fn eq(&self, other: &Self) -> bool { self.name == other.name }
-}
-pub enum Item {
-    Entity(Entity),
-    Tag(Tag),
-    Relation(Relation),
-}
-impl Item {
-    pub fn new(name: ItemID) -> Item {
-        match name {
-            ItemID::Entity(name)    => Item::Entity{0: Entity::new(name)},
-            ItemID::Tag(name)       => Item::Tag{0: Tag::new(name)},
-            ItemID::Relation(name)  => Item::Relation{0: Relation::new(name)},
-        }
-    }
-    pub fn get_name(&self) -> String { self.name }
-    pub fn gen_blurb() -> String {
-        // TODO
-        return "is amazang".to_owned();
-    }
-    pub fn gen_summary() -> String {
-        return "- likes Coco\n- likes cado".to_owned();
-    }
 }
