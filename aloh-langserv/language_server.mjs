@@ -21,6 +21,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 import { basename } from 'path'
 import { appendFile } from 'fs/promises';
 
+import { gen_completions } from './engine_glue.mjs';
 import dbman_init from './dbman.mjs';
 import objman_init from './objman.mjs';
 import { file_log } from './util.mjs'
@@ -84,30 +85,45 @@ connection.onInitialize(async (client_init_params) => {
 });
 
 documents.onDidChangeContent(async change => {      // TODO: lots of race conditions here
-    const most_recent_text = change.document.getText();
-    const file_id = basename((new URL(change.document.uri)).pathname);   // TODO: remove .aloh extension?
-
-    if (Date.now() - prev_db_timestamp >= DB_INTERVAL) {
-        clearTimeout(active_db_timeout);
-        active_db_timeout = setTimeout(() => {
-            prev_db_timestamp = Date.now();
-            objman.parseObjects(most_recent_text)
-                .then(objs => {
-                    dbman.setNoteObjects(file_id, objs);
-                    syntax_highlight(change.document, file_id, objs);
-                });
-        }, DB_INTERVAL);
-    }
+    //const most_recent_text = change.document.getText();
+    //const file_id = basename((new URL(change.document.uri)).pathname);   // TODO: remove .aloh extension?
+    //
+    //if (Date.now() - prev_db_timestamp >= DB_INTERVAL) {
+    //    clearTimeout(active_db_timeout);
+    //    active_db_timeout = setTimeout(() => {
+    //        prev_db_timestamp = Date.now();
+    //        objman.parseObjects(most_recent_text)
+    //            .then(objs => {
+    //                dbman.setNoteObjects(file_id, objs);
+    //                syntax_highlight(change.document, file_id, objs);
+    //            });
+    //    }, DB_INTERVAL);
+    //}
 });
 
 connection.onDidChangeWatchedFiles(async change => {
     // Monitored files have change in VSCode
     //connection.console.log('We received an file change event');
     //connection.console.log(change);
+    const diagnostics = [{
+        severity: DiagnosticSeverity.Hint,
+        range: {
+            start: { line: 0, position: 0 },
+            end: { line: 0, position: 1 },
+        },
+        message: `Aloh is active here in '${file_id}'!`,
+        source: 'hint',
+    }];
+    connection.sendDiagnostics({
+        uri: document.uri,
+        diagnostics: diagnostics
+    });
 });
 
 connection.onCompletion(async textdocument_position => {
-    return (await dbman.getCompletionList())
+    //return (await dbman.getCompletionList())
+    //return [{name: 'Huxley Marvit', data: 'ent'}, {name: 'Jacob Cole', data: 'ent'}, {name: 'Zachary Sayyah', data: 'ent'}]
+    return (await gen_completions())
         .map(item => ({
             label: item.name,
             kind: CompletionItemKind.Text,
@@ -117,11 +133,11 @@ connection.onCompletion(async textdocument_position => {
 });
 
 connection.onCompletionResolve(async (item) => {
-    item.detail = await dbman.getItemBlurb(item.data.type, item.label)
-        .catch(err => err.toString());
-    item.documentation = await dbman.getItemDescription(item.data.type, item.label)
-        .catch(err => err.toString());
-    return item;
+    //item.detail = await dbman.getItemBlurb(item.data.type, item.label)
+    //    .catch(err => err.toString());
+    //item.documentation = await dbman.getItemDescription(item.data.type, item.label)
+    //    .catch(err => err.toString());
+    //return item;
 });
 
 documents.listen(connection);
