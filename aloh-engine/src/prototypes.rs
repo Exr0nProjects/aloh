@@ -47,75 +47,91 @@ impl PartialEq for RelationInstance {
     }
 }
 
+#[derive(Clone, Eq, Debug)]
+pub struct Item {
+    name: String,
+    kind: String,
+    pub locs: IndexMap<String, Vec<LineSpan>>,
+}
+impl Item {
+    pub fn new(kind: String, name: String) -> Item {
+        Item { kind, name, locs: IndexMap::new() }
+    }
+    pub fn get_name(&self) -> String { self.name.clone() }
+    pub fn get_kind(&self) -> String { self.kind.clone() }
+}
+impl PartialEq for Item {
+    fn eq(&self, other: &Self) -> bool { self.name == other.name }
+}
 
-pub trait Item {
-    fn get_name(&self) -> String;
-    fn get_type(&self) -> String;
-    fn get_blurb(&self) -> String {
-        // TODO
-        return "is amazang".to_owned();
-    }
-    fn gen_summary(&self) -> String {
-        // TODO
-        return "- likes Coco\n- likes cado".to_owned();
-    }
-}
-
-#[derive(Clone, Eq, Debug)]
-pub struct Entity {
-    name: EntityID,
-    locs: IndexMap<NoteID, Vec<LineSpan>>,
-    outgoing: IndexMap< EntityID, IndexMap<RelationID, Vec<RelationInstance>> >,
-    incoming: IndexMap< EntityID, IndexMap<RelationID, Vec<RelationInstance>> >,
-}
-impl Entity {
-    pub fn new(name: EntityID) -> Entity {
-        Entity {
-            name,
-            locs: IndexMap::new(),
-            incoming: IndexMap::new(),
-            outgoing: IndexMap::new()
-        }
-    }
-}
-impl Item for Entity {
-    fn get_name(&self) -> String { self.name.clone().into() }
-    fn get_type(&self) -> String { "ent".to_owned() }
-}
-impl PartialEq for Entity {
-    fn eq(&self, other: &Self) -> bool { self.name == other.name }
-}
-#[derive(Clone, Eq, Debug)]
-pub struct Tag {
-    name: TagID,
-    locs: IndexMap<NoteID, Vec<LineSpan>>,
-}
-impl Tag {
-    pub fn new(name: TagID) -> Tag {
-        Tag { name, locs: IndexMap::new() }
-    }
-}
-impl Item for Tag {
-    fn get_name(&self) -> String { self.name.clone().into() }
-    fn get_type(&self) -> String { "tag".to_owned() }
-}
-impl PartialEq for Tag {
-    fn eq(&self, other: &Self) -> bool { self.name == other.name }
-}
-#[derive(Clone, Eq, Debug)]
-pub struct Relation {
-    name: RelationID,
-    locs: IndexMap<NoteID, Vec<LineSpan>>,
-}
-impl Relation {
-    pub fn new(name: RelationID) -> Relation {
-        Relation { name, locs: IndexMap::new() }
-    }
-}
-impl Item for Relation {
-    fn get_name(&self) -> String { self.name.clone().into() }
-    fn get_type(&self) -> String { "rel".to_owned() }
-}
-impl PartialEq for Relation {
-    fn eq(&self, other: &Self) -> bool { self.name == other.name }
-}
+// pub trait Item {
+//     fn get_name(&self) -> String;
+//     fn get_type(&self) -> String;
+//     fn get_blurb(&self) -> String {
+//         // TODO
+//         return "is amazang".to_owned();
+//     }
+//     fn gen_summary(&self) -> String {
+//         // TODO
+//         return "- likes Coco\n- likes cado".to_owned();
+//     }
+// }
+// 
+// #[derive(Clone, Eq, Debug)]
+// pub struct Entity {
+//     name: EntityID,
+//     locs: IndexMap<NoteID, Vec<LineSpan>>,
+//     outgoing: IndexMap< EntityID, IndexMap<RelationID, Vec<RelationInstance>> >,
+//     incoming: IndexMap< EntityID, IndexMap<RelationID, Vec<RelationInstance>> >,
+// }
+// impl Entity {
+//     pub fn new(name: EntityID) -> Entity {
+//         Entity {
+//             name,
+//             locs: IndexMap::new(),
+//             incoming: IndexMap::new(),
+//             outgoing: IndexMap::new()
+//         }
+//     }
+// }
+// impl Item for Entity {
+//     fn get_name(&self) -> String { self.name.clone().into() }
+//     fn get_type(&self) -> String { "ent".to_owned() }
+// }
+// impl PartialEq for Entity {
+//     fn eq(&self, other: &Self) -> bool { self.name == other.name }
+// }
+// #[derive(Clone, Eq, Debug)]
+// pub struct Tag {
+//     name: TagID,
+//     locs: IndexMap<NoteID, Vec<LineSpan>>,
+// }
+// impl Tag {
+//     pub fn new(name: TagID) -> Tag {
+//         Tag { name, locs: IndexMap::new() }
+//     }
+// }
+// impl Item for Tag {
+//     fn get_name(&self) -> String { self.name.clone().into() }
+//     fn get_type(&self) -> String { "tag".to_owned() }
+// }
+// impl PartialEq for Tag {
+//     fn eq(&self, other: &Self) -> bool { self.name == other.name }
+// }
+// #[derive(Clone, Eq, Debug)]
+// pub struct Relation {
+//     name: RelationID,
+//     locs: IndexMap<NoteID, Vec<LineSpan>>,
+// }
+// impl Relation {
+//     pub fn new(name: RelationID) -> Relation {
+//         Relation { name, locs: IndexMap::new() }
+//     }
+// }
+// impl Item for Relation {
+//     fn get_name(&self) -> String { self.name.clone().into() }
+//     fn get_type(&self) -> String { "rel".to_owned() }
+// }
+// impl PartialEq for Relation {
+//     fn eq(&self, other: &Self) -> bool { self.name == other.name }
+// }
