@@ -4,8 +4,12 @@ use crate::prototypes::{ Item, Entity, Tag, Relation, ItemID, EntityID, TagID, R
 
 pub fn update_note(/* TODO */) { /* TODO */ }
 
-pub fn suggest(/* TODO */) -> Vec<Item> {
-    return vec![Entity::new_item("Huxley Marvit".to_owned())];
+pub fn suggest(contents: String, line: i32, col: i32) -> Vec<Item> {
+    return vec![
+        Entity::new_item("Huxley Marvit".to_owned()),
+        Entity::new_item("Jacob Cole".to_owned()),
+        Entity::new_item("Zachary Sayyah".to_owned()),
+    ];
 }
 //pub fn get_blurb(item: Item) -> String { 
 //    return item.get_blurb();

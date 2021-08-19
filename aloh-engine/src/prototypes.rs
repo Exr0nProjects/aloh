@@ -115,6 +115,7 @@ impl Item {
             ItemID::Relation(name)  => Item::Relation{0: Relation::new(name)},
         }
     }
+    pub fn get_name(&self) -> String { self.name }
     pub fn gen_blurb() -> String {
         // TODO
         return "is amazang".to_owned();
